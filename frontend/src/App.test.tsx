@@ -16,5 +16,8 @@ describe('App', () => {
       screen.getByText(/Compare cities, calculate salary adjustments/i)
     ).toBeInTheDocument();
   });
-
+  it('renders the Interactive City Map section', () => {
+    render(<App />);
+    expect(screen.getByText(/Interactive City Map/i)).toBeInTheDocument();
+  });
 });
