@@ -20,4 +20,9 @@ describe('App', () => {
     render(<App />);
     expect(screen.getByText(/Interactive City Map/i)).toBeInTheDocument();
   });
+
+  it('renders the All Cities Data section', () => {
+    render(<App />);
+    expect(screen.getByText(/All Cities Data/i)).toBeInTheDocument();
+  });
 });
