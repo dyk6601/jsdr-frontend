@@ -25,4 +25,11 @@ describe('App', () => {
     render(<App />);
     expect(screen.getByText(/All Cities Data/i)).toBeInTheDocument();
   });
+
+  it('renders map instructions for selecting cities', () => {
+    render(<App />);
+    expect(
+      screen.getByText(/Click on markers to select cities for comparison \(max 4\)/i)
+    ).toBeInTheDocument();
+  });
 });
