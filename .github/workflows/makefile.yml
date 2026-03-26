@@ -21,7 +21,7 @@ jobs:
         cache-dependency-path: frontend/package-lock.json
 
     - name: Install dependencies
-      run: make -C frontend install
+      run: make install
 
     - name: Run tests
-      run: make -C frontend test
+      run: make test
