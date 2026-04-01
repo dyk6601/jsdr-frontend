@@ -12,6 +12,8 @@ interface City {
   population?: number;
   lat?: number;
   lng?: number;
+  /** Approx. median household income (USD); from API or local fallback for known metros */
+  average_salary?: number;
 }
 
 const CITY_COORDINATES: Record<string, [number, number]> = {
@@ -57,6 +59,50 @@ const CITY_COORDINATES: Record<string, [number, number]> = {
   'Cleveland|OH': [41.4993, -81.6944],
 };
 
+/** Approximate median household income (USD) when API does not provide salary — matches CITY_COORDINATES keys */
+const FALLBACK_AVERAGE_SALARY: Record<string, number> = {
+  'New York|NY': 75000,
+  'Los Angeles|CA': 69000,
+  'Chicago|IL': 62000,
+  'Houston|TX': 56000,
+  'Phoenix|AZ': 62000,
+  'Philadelphia|PA': 52000,
+  'San Antonio|TX': 55000,
+  'San Diego|CA': 83000,
+  'Dallas|TX': 58000,
+  'San Jose|CA': 125000,
+  'Austin|TX': 78000,
+  'Jacksonville|FL': 55000,
+  'Fort Worth|TX': 58000,
+  'Columbus|OH': 58000,
+  'Charlotte|NC': 62000,
+  'San Francisco|CA': 126000,
+  'Indianapolis|IN': 54000,
+  'Seattle|WA': 93000,
+  'Denver|CO': 78000,
+  'Boston|MA': 81000,
+  'Nashville|TN': 62000,
+  'Detroit|MI': 32000,
+  'Portland|OR': 72000,
+  'Las Vegas|NV': 58000,
+  'Memphis|TN': 45000,
+  'Louisville|KY': 52000,
+  'Baltimore|MD': 52000,
+  'Milwaukee|WI': 45000,
+  'Albuquerque|NM': 52000,
+  'Tucson|AZ': 52000,
+  'Fresno|CA': 48000,
+  'Sacramento|CA': 62000,
+  'Kansas City|MO': 58000,
+  'Mesa|AZ': 58000,
+  'Atlanta|GA': 62000,
+  'Miami|FL': 47000,
+  'Raleigh|NC': 78000,
+  'Omaha|NE': 62000,
+  'Minneapolis|MN': 72000,
+  'Cleveland|OH': 32000,
+};
+
 const toNumberOrUndefined = (value: unknown): number | undefined => {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (typeof value === 'string' && value.trim() !== '') {
@@ -82,12 +128,19 @@ const normalizeCity = (raw: any): City | null => {
   const lng = toNumberOrUndefined(raw?.lng ?? raw?.lon ?? raw?.long ?? raw?.longitude) ?? fallback?.[1];
   const population = toNumberOrUndefined(raw?.population);
 
+  const avgFromApi = toNumberOrUndefined(
+    raw?.average_salary ?? raw?.avg_salary ?? raw?.median_household_income ?? raw?.median_income,
+  );
+  const metroKey = stateCode ? `${name}|${stateCode}` : '';
+  const average_salary = avgFromApi ?? (metroKey ? FALLBACK_AVERAGE_SALARY[metroKey] : undefined);
+
   return {
     name,
     state_code: stateCode,
     population,
     lat,
     lng,
+    average_salary,
   };
 };
 

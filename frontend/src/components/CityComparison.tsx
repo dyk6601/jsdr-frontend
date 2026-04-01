@@ -4,6 +4,7 @@ interface City {
   name: string;
   state_code?: string;
   population?: number;
+  average_salary?: number;
 }
 
 interface CityComparisonProps {
@@ -38,6 +39,9 @@ const CityComparison = ({ cities }: CityComparisonProps) => {
             {city.state_code && ` (${city.state_code})`}
             {city.population && (
               <div>Population: {city.population.toLocaleString()}</div>
+            )}
+            {city.average_salary != null && (
+              <div>Average salary: ${city.average_salary.toLocaleString()}</div>
             )}
           </div>
         ))}

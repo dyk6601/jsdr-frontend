@@ -22,6 +22,7 @@ interface City {
   population?: number;
   lat?: number;
   lng?: number;
+  average_salary?: number;
 }
 
 interface CityMapProps {
@@ -68,6 +69,9 @@ const CityMap = ({ cities, onCitySelect }: CityMapProps) => {
                 {city.state_code && <div>{city.state_code}</div>}
                 {city.population && (
                   <div>Population: {city.population.toLocaleString()}</div>
+                )}
+                {city.average_salary != null && (
+                  <div>Average salary: ${city.average_salary.toLocaleString()}</div>
                 )}
               </Popup>
             </Marker>

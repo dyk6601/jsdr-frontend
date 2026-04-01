@@ -3,7 +3,7 @@ PKG = frontend
 # Frontend makefile
 
 NPM = npm
-DIR = .
+DIR = .git
 
 .PHONY: install dev build preview lint test ci clean
 
