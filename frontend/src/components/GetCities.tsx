@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { getCities, type City } from '../api'
 
 export default function CitiesCard() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  /** `null` until the user loads data at least once */
   const [cities, setCities] = useState<City[] | null>(null)
 
   const load = async () => {
-    setCities(null)
     setError(null)
     setLoading(true)
     try {
@@ -20,36 +20,45 @@ export default function CitiesCard() {
     }
   }
 
-  useEffect(() => {
-    void load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   return (
     <div className="card">
       <h2>Cities</h2>
+      <p className="cities-card-hint">Load the list from the API when you are ready.</p>
+
       {cities === null && !loading && !error && (
-        <button onClick={load}>Get Cities</button>
+        <button type="button" onClick={load} className="cities-load-button">
+          Load cities
+        </button>
       )}
+
+      {loading && <p className="cities-loading">Loading…</p>}
+
       {error && !loading && (
-        <div>
-          <button onClick={load}>Retry</button>
+        <div className="cities-error-block">
+          <p className="cities-error">Error: {error}</p>
+          <button type="button" onClick={load} className="cities-load-button">
+            Retry
+          </button>
         </div>
       )}
-      {loading && <p>Loading...</p>}
-      {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+
       {cities !== null && !loading && !error && (
-        cities.length === 0 ? (
-          <p>No cities found</p>
-        ) : (
-          <ul>
-            {cities.map((c) => (
-              <li key={c.id ?? c.name}>
-                {c.name} {c.state_code ? `(${c.state_code})` : ''}
-              </li>
-            ))}
-          </ul>
-        )
+        <>
+          {cities.length === 0 ? (
+            <p>No cities found</p>
+          ) : (
+            <ul className="cities-list">
+              {cities.map((c) => (
+                <li key={c.id ?? c.name}>
+                  {c.name} {c.state_code ? `(${c.state_code})` : ''}
+                </li>
+              ))}
+            </ul>
+          )}
+          <button type="button" onClick={load} className="cities-refresh-button">
+            Refresh
+          </button>
+        </>
       )}
     </div>
   )
