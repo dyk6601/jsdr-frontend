@@ -29,20 +29,20 @@ export default function CityLookup() {
   return (
     <div className="card">
       <h2>City Lookup</h2>
-      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'center' }}>
         <input
           type="text"
           placeholder="Search by city name"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          style={{ padding: '0.4rem 0.6rem', borderRadius: '6px', border: '1px solid #555' }}
+          style={{ padding: 'var(--space-2) var(--space-3)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface-muted)', color: 'var(--color-text)' }}
         />
         <button onClick={handleSearch} disabled={loading || !query.trim()}>
           {loading ? 'Searching…' : 'Search'}
         </button>
       </div>
-      {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+      {error && <p className="status-error">Error: {error}</p>}
       {results !== null && !loading && !error && (
         results.length === 0 ? (
           <p>No cities found matching "{query}"</p>

@@ -29,7 +29,7 @@ export default function HelloCard() {
     <div className="card">
       <h2>Hello Endpoint</h2>
       {loading && <p>Loading...</p>}
-      {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+      {error && <p className="status-error">Error: {error}</p>}
       {!loading && !error && <p>{message}</p>}
     </div>
   )

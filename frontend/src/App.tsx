@@ -204,7 +204,7 @@ function App() {
         <h2>Interactive City Map</h2>
         <p>Click on markers to select cities for comparison (max 4)</p>
         {loadingCities && <p>Loading cities...</p>}
-        {citiesError && <p style={{ color: 'red' }}>Error loading cities: {citiesError}</p>}
+        {citiesError && <p className="status-error">Error loading cities: {citiesError}</p>}
         <CityMap cities={cities} onCitySelect={handleCitySelect} />
         {selectedCities.length > 0 && (
           <button
