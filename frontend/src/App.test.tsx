@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import App from './App';
 
@@ -31,5 +31,13 @@ describe('App', () => {
     expect(
       screen.getByText(/Click on markers to select cities for comparison \(max 4\)/i)
     ).toBeInTheDocument();
+  });
+
+  it('offers Google sign-in with auth URL', async () => {
+    render(<App />);
+    const link = await waitFor(() =>
+      screen.getByRole('link', { name: /sign in with google/i })
+    );
+    expect(link).toHaveAttribute('href', expect.stringMatching(/\/auth\/google$/));
   });
 });

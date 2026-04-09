@@ -22,6 +22,12 @@ export const API_ENDPOINTS = {
   ENDPOINTS: "/endpoints",
   COST_OF_LIVING: "/cost-of-living",
   SALARY_ADJUSTMENT: "/cost-of-living/salary-adjustment",
+  /** GET — start Google OAuth (browser redirect). */
+  GOOGLE_AUTH: "/auth/google",
+  /** GET — optional: current user when session cookie is set (implement on backend). */
+  AUTH_ME: "/auth/me",
+  /** POST — optional: clear session cookie (implement on backend). */
+  AUTH_LOGOUT: "/auth/logout",
 } as const
 
 /** Full URLs: API_BASE_URL + path. */
@@ -35,4 +41,7 @@ export const API_URLS = {
     `${API_BASE_URL}${API_ENDPOINTS.CITY_EXISTS(id)}`,
   COST_OF_LIVING: `${API_BASE_URL}${API_ENDPOINTS.COST_OF_LIVING}`,
   SALARY_ADJUSTMENT: `${API_BASE_URL}${API_ENDPOINTS.SALARY_ADJUSTMENT}`,
+  GOOGLE_AUTH: `${API_BASE_URL}${API_ENDPOINTS.GOOGLE_AUTH}`,
+  AUTH_ME: `${API_BASE_URL}${API_ENDPOINTS.AUTH_ME}`,
+  AUTH_LOGOUT: `${API_BASE_URL}${API_ENDPOINTS.AUTH_LOGOUT}`,
 } as const

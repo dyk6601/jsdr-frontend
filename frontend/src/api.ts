@@ -2,6 +2,17 @@ import { API_URLS } from './config/api'
 
 export type City = { id: string; name: string; [key: string]: any }
 
+/** Sends the `session` cookie set by Google OAuth callback (same-site or configured CORS). */
+export function apiFetch(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<Response> {
+  return fetch(input, {
+    ...init,
+    credentials: 'include',
+  })
+}
+
 async function parseResponse(res: Response) {
   const ct = res.headers.get('content-type') || ''
   if (ct.includes('application/json')) return await res.json()
@@ -9,7 +20,7 @@ async function parseResponse(res: Response) {
 }
 
 export async function getHello(): Promise<string> {
-  const res = await fetch(API_URLS.HELLO)
+  const res = await apiFetch(API_URLS.HELLO)
   if (!res.ok) throw new Error(`getHello failed: ${res.status}`)
   const body = await parseResponse(res)
   if (typeof body === 'string') return body
@@ -21,14 +32,14 @@ export async function getHello(): Promise<string> {
 }
 
 export async function getEndpoints(): Promise<string[]> {
-  const res = await fetch(API_URLS.ENDPOINTS)
+  const res = await apiFetch(API_URLS.ENDPOINTS)
   if (!res.ok) throw new Error(`getEndpoints failed: ${res.status}`)
   const data = await res.json()
   return Array.isArray(data) ? data : []
 }
 
 export async function getCities(): Promise<City[]> {
-  const res = await fetch(API_URLS.CITIES)
+  const res = await apiFetch(API_URLS.CITIES)
   if (!res.ok) throw new Error(`getCities failed: ${res.status}`)
   const body = await res.json()
 
@@ -46,7 +57,7 @@ export async function getCities(): Promise<City[]> {
 }
 
 export async function getCityExists(cityId: string): Promise<boolean> {
-  const res = await fetch(API_URLS.CITY_EXISTS(cityId))
+  const res = await apiFetch(API_URLS.CITY_EXISTS(cityId))
   if (!res.ok) throw new Error(`getCityExists failed: ${res.status}`)
   const body = await parseResponse(res)
   if (body && typeof body === 'object' && typeof (body as any).exists === 'boolean') {
@@ -56,7 +67,7 @@ export async function getCityExists(cityId: string): Promise<boolean> {
 }
 
 export async function getCity(cityId: string): Promise<City> {
-  const res = await fetch(API_URLS.CITY_BY_ID(cityId))
+  const res = await apiFetch(API_URLS.CITY_BY_ID(cityId))
   if (!res.ok) {
     if (res.status === 404) throw new Error('City not found')
     throw new Error(`getCity failed: ${res.status}`)
@@ -80,7 +91,7 @@ export type SalaryResult = {
 }
 
 export async function getCostOfLiving(): Promise<Record<string, number>> {
-  const res = await fetch(API_URLS.COST_OF_LIVING)
+  const res = await apiFetch(API_URLS.COST_OF_LIVING)
   if (!res.ok) throw new Error(`getCostOfLiving failed: ${res.status}`)
   const body = await res.json()
   return body.cost_of_living ?? body
@@ -96,7 +107,7 @@ export async function getSalaryAdjustment(
     from_city: fromCity,
     to_city: toCity,
   })
-  const res = await fetch(`${API_URLS.SALARY_ADJUSTMENT}?${params}`)
+  const res = await apiFetch(`${API_URLS.SALARY_ADJUSTMENT}?${params}`)
   if (!res.ok) {
     const body = await parseResponse(res)
     const msg = (body as any)?.Error ?? `getSalaryAdjustment failed: ${res.status}`
@@ -106,11 +117,48 @@ export async function getSalaryAdjustment(
 }
 
 export async function setPopulation(cityName: string, state: string, population: number): Promise<void> {
-  const res = await fetch(API_URLS.CITIES, {
+  const res = await apiFetch(API_URLS.CITIES, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ city: cityName, state: state, population: population }),
   })
   if (!res.ok) throw new Error(`setPopulation failed: ${res.status}`)
   return await res.json()
+}
+
+// --- Auth (Google OAuth `session` cookie) ---
+
+export type AuthUser = {
+  email: string
+  name?: string
+  avatar_url?: string
+}
+
+/**
+ * Returns the signed-in user when GET /auth/me succeeds.
+ * Add this route on the backend to show name/email in the UI after login.
+ */
+export async function getCurrentUser(): Promise<AuthUser | null> {
+  try {
+    const res = await apiFetch(API_URLS.AUTH_ME, { method: 'GET' })
+    if (res.status === 401 || res.status === 403) return null
+    if (res.status === 404) return null
+    if (!res.ok) return null
+    const body = await res.json()
+    if (body && typeof body === 'object' && typeof (body as AuthUser).email === 'string') {
+      return body as AuthUser
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Clears the session cookie. Add POST /auth/logout on the backend that deletes the cookie.
+ */
+export async function signOut(): Promise<void> {
+  const res = await apiFetch(API_URLS.AUTH_LOGOUT, { method: 'POST' })
+  if (res.status === 404) return
+  if (!res.ok) throw new Error(`signOut failed: ${res.status}`)
 }

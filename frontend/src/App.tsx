@@ -4,6 +4,7 @@ import CityMap from './components/CityMap'
 import CityComparison from './components/CityComparison'
 import SalaryCalculator from './components/SalaryCalculator'
 import CitiesCard from './components/GetCities'
+import AuthBar from './components/AuthBar'
 import { getCities } from './api'
 
 interface City {
@@ -197,6 +198,8 @@ function App() {
 
   return (
     <div className="app-shell">
+      <AuthBar />
+
       <h1>LiveWhere — Cost of Living Comparison Tool</h1>
       <p>Compare cities, calculate salary adjustments, and find your ideal location</p>
 
