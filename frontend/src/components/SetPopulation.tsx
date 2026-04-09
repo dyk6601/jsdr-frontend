@@ -74,8 +74,8 @@ export default function SetPopulation() {
         {loading ? 'Setting...' : 'Set Population'}
       </button>
 
-      {error && <p style={{ color: 'red' }}>Error: {error}</p>}
-      {success && <p style={{ color: 'green' }}>{success}</p>}
+      {error && <p className="status-error">Error: {error}</p>}
+      {success && <p className="status-success">{success}</p>}
     </div>
   )
 }
