@@ -28,6 +28,8 @@ export const API_ENDPOINTS = {
   AUTH_ME: "/auth/me",
   /** POST — optional: clear session cookie (implement on backend). */
   AUTH_LOGOUT: "/auth/logout",
+  /** GET — ranked city recommendations with optional filters. */
+  RECOMMENDATIONS: "/recommendations",
 } as const
 
 /** Full URLs: API_BASE_URL + path. */
@@ -44,4 +46,5 @@ export const API_URLS = {
   GOOGLE_AUTH: `${API_BASE_URL}${API_ENDPOINTS.GOOGLE_AUTH}`,
   AUTH_ME: `${API_BASE_URL}${API_ENDPOINTS.AUTH_ME}`,
   AUTH_LOGOUT: `${API_BASE_URL}${API_ENDPOINTS.AUTH_LOGOUT}`,
+  RECOMMENDATIONS: `${API_BASE_URL}${API_ENDPOINTS.RECOMMENDATIONS}`,
 } as const

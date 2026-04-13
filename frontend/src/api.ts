@@ -162,3 +162,43 @@ export async function signOut(): Promise<void> {
   if (res.status === 404) return
   if (!res.ok) throw new Error(`signOut failed: ${res.status}`)
 }
+
+// --- Recommendations ---
+
+export type RecommendedCity = {
+  name: string
+  state_code: string
+  population: number
+  lat?: number
+  lng?: number
+  col_index: number
+  affordability_score: number
+  qol_score: number
+  adjusted_salary?: number
+}
+
+export type RecommendationsResult = {
+  recommendations: RecommendedCity[]
+  total: number
+}
+
+export async function getRecommendations(params: {
+  salary?: number
+  state?: string
+  size?: 'small' | 'medium' | 'large' | 'any'
+  top_n?: number
+}): Promise<RecommendationsResult> {
+  const query = new URLSearchParams()
+  if (params.salary != null) query.set('salary', String(params.salary))
+  if (params.state) query.set('state', params.state)
+  if (params.size && params.size !== 'any') query.set('size', params.size)
+  if (params.top_n) query.set('top_n', String(params.top_n))
+
+  const url = query.toString()
+    ? `${API_URLS.RECOMMENDATIONS}?${query}`
+    : API_URLS.RECOMMENDATIONS
+
+  const res = await apiFetch(url)
+  if (!res.ok) throw new Error(`getRecommendations failed: ${res.status}`)
+  return await res.json()
+}

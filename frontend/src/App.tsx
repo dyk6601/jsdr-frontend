@@ -5,6 +5,7 @@ import CityComparison from './components/CityComparison'
 import SalaryCalculator from './components/SalaryCalculator'
 import CitiesCard from './components/GetCities'
 import AuthBar from './components/AuthBar'
+import SmartCityFinder from './components/SmartCityFinder'
 import { getCities } from './api'
 
 interface City {
@@ -225,6 +226,10 @@ function App() {
 
       <div className="app-section">
         <SalaryCalculator />
+      </div>
+
+      <div className="app-section">
+        <SmartCityFinder />
       </div>
 
       <div className="app-section">
