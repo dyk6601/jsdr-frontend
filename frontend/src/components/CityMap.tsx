@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Icon } from 'leaflet';
+import { Icon, DivIcon } from 'leaflet';
+import { getCostOfLiving } from '../api';
 
 // Fix for default marker icons in React Leaflet
 // Leaflet expects icon images in specific paths that don't work with Vite bundling
@@ -30,54 +32,116 @@ interface CityMapProps {
   onCitySelect?: (city: City) => void;
 }
 
+const MAX_COL = 105;
+const MIN_COL = 35;
+
+function affordabilityScore(colIndex: number): number {
+  return Math.round(Math.max(0, Math.min(100, ((MAX_COL - colIndex) / (MAX_COL - MIN_COL)) * 100)));
+}
+
+function markerColor(score: number): string {
+  if (score >= 60) return '#10b981'; // green — affordable
+  if (score >= 40) return '#f59e0b'; // yellow — moderate
+  return '#ef4444';                  // red — expensive
+}
+
+function coloredIcon(color: string): DivIcon {
+  return new DivIcon({
+    html: `<div style="
+      width: 14px;
+      height: 14px;
+      background: ${color};
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    "></div>`,
+    className: '',
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+    popupAnchor: [0, -10],
+  });
+}
+
 // Interactive map component for city visualization
 const CityMap = ({ cities, onCitySelect }: CityMapProps) => {
+  const [colData, setColData] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    getCostOfLiving().then(setColData).catch(() => {});
+  }, []);
+
+  const getColIndex = (cityName: string): number | null => {
+    const lower = cityName.toLowerCase();
+    for (const [key, val] of Object.entries(colData)) {
+      if (key.toLowerCase() === lower) return val;
+    }
+    return null;
+  };
+
   // Default center: USA (geographic center)
   const defaultCenter: [number, number] = [39.8283, -98.5795];
   const defaultZoom = 4;
 
   return (
-    <div style={{ height: '500px', width: '100%' }}>
-      <MapContainer
-        center={defaultCenter}
-        zoom={defaultZoom}
-        style={{ height: '100%', width: '100%' }}
-      >
-        {/* OpenStreetMap tile layer for base map */}
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {cities.map((city, idx) => {
-          // Use default coordinates if not provided
-          const lat = city.lat || 0;
-          const lng = city.lng || 0;
-          
-          // Skip cities without valid coordinates
-          if (lat === 0 && lng === 0) return null;
+    <div>
+      {/* Legend */}
+      <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '8px', fontSize: '0.8rem' }}>
+        <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: '#10b981', marginRight: 4 }} />Affordable (60+)</span>
+        <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: '#f59e0b', marginRight: 4 }} />Moderate (40–59)</span>
+        <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: '#ef4444', marginRight: 4 }} />Expensive (&lt;40)</span>
+      </div>
+      <div style={{ height: '500px', width: '100%' }}>
+        <MapContainer
+          center={defaultCenter}
+          zoom={defaultZoom}
+          style={{ height: '100%', width: '100%' }}
+        >
+          {/* OpenStreetMap tile layer for base map */}
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          {cities.map((city, idx) => {
+            const lat = city.lat || 0;
+            const lng = city.lng || 0;
 
-          return (
-            <Marker
-              key={idx}
-              position={[lat, lng]}
-              eventHandlers={{
-                click: () => onCitySelect?.(city),
-              }}
-            >
-              <Popup>
-                <strong>{city.name}</strong>
-                {city.state_code && <div>{city.state_code}</div>}
-                {city.population && (
-                  <div>Population: {city.population.toLocaleString()}</div>
-                )}
-                {city.average_salary != null && (
-                  <div>Average salary: ${city.average_salary.toLocaleString()}</div>
-                )}
-              </Popup>
-            </Marker>
-          );
-        })}
-      </MapContainer>
+            if (lat === 0 && lng === 0) return null;
+
+            const colIdx = getColIndex(city.name);
+            const score = colIdx !== null ? affordabilityScore(colIdx) : null;
+            const icon = score !== null
+              ? coloredIcon(markerColor(score))
+              : coloredIcon('#6366f1');
+
+            return (
+              <Marker
+                key={idx}
+                position={[lat, lng]}
+                icon={icon}
+                eventHandlers={{
+                  click: () => onCitySelect?.(city),
+                }}
+              >
+                <Popup>
+                  <strong>{city.name}</strong>
+                  {city.state_code && <div>{city.state_code}</div>}
+                  {city.population && (
+                    <div>Population: {city.population.toLocaleString()}</div>
+                  )}
+                  {city.average_salary != null && (
+                    <div>Avg salary: ${city.average_salary.toLocaleString()}</div>
+                  )}
+                  {score !== null && (
+                    <div style={{ marginTop: 4, fontWeight: 600, color: markerColor(score) }}>
+                      Affordability: {score}/100
+                    </div>
+                  )}
+                </Popup>
+              </Marker>
+            );
+          })}
+        </MapContainer>
+      </div>
     </div>
   );
 };
