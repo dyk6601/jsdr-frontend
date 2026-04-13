@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { getCities, type City } from '../api'
 
 export default function CitiesCard() {
-      {error && <p className="status-error">Error: {error}</p>}
   const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
   /** `null` until the user loads data at least once */
   const [cities, setCities] = useState<City[] | null>(null)
 
