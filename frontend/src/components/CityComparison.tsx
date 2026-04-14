@@ -34,20 +34,35 @@ const DEFAULT_WEIGHTS: Record<string, number> = {
   Entertainment: 1,
 };
 
-function categoryScore(colIndex: number, ratio: number): number {
-  const MAX_COL = 105;
-  const MIN_COL = 35;
-  return Math.max(0, Math.min(100, ((MAX_COL - colIndex * ratio) / (MAX_COL - MIN_COL)) * 100));
+// Baseline: ~$60k income at NYC-level COL (index 100) maps to a score of 50.
+// Doubling purchasing power (same income at half COL, or double income at same COL) → 100.
+const BASELINE_INCOME = 60000;
+const BASELINE_COL = 100;
+
+function personalColIndex(colIndex: number, weights: Record<string, number>): number {
+  const totalWeight = CATEGORIES.reduce((s, c) => s + (weights[c.key] ?? 0), 0);
+  if (totalWeight === 0) return colIndex;
+  const weightedRatio = CATEGORIES.reduce(
+    (s, c) => s + (weights[c.key] ?? 0) * c.ratio,
+    0,
+  ) / totalWeight;
+  return colIndex * weightedRatio;
 }
 
-function weightedAffordability(colIndex: number, weights: Record<string, number>): number {
-  const totalWeight = CATEGORIES.reduce((s, c) => s + (weights[c.key] ?? 0), 0);
-  if (totalWeight === 0) return 0;
-  const weightedSum = CATEGORIES.reduce(
-    (s, c) => s + (weights[c.key] ?? 0) * categoryScore(colIndex, c.ratio),
-    0,
-  );
-  return Math.round(weightedSum / totalWeight);
+function weightedAffordability(
+  colIndex: number,
+  weights: Record<string, number>,
+  income: number | null,
+): number {
+  const personalCol = personalColIndex(colIndex, weights);
+  if (personalCol <= 0) return 0;
+  // Fallback when income is unknown: score purely off cost (lower COL → higher score).
+  if (income == null || income <= 0) {
+    return Math.max(0, Math.min(100, Math.round((BASELINE_COL / personalCol) * 50)));
+  }
+  const purchasingPower = income / personalCol;
+  const baselinePower = BASELINE_INCOME / BASELINE_COL;
+  return Math.max(0, Math.min(100, Math.round((purchasingPower / baselinePower) * 50)));
 }
 
 function scoreColor(score: number): string {
@@ -110,7 +125,7 @@ const CityComparison = ({ cities, onRemoveCity }: CityComparisonProps) => {
       <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '28px', justifyContent: 'center' }}>
         {cities.map((city, idx) => {
           const colIdx = getColIndex(city.name);
-          const score = colIdx !== null ? weightedAffordability(colIdx, weights) : null;
+          const score = colIdx !== null ? weightedAffordability(colIdx, weights, city.average_salary ?? null) : null;
           return (
             <div
               key={idx}

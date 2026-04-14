@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { getRecommendations, type RecommendedCity } from '../api';
+import { useEffect, useState } from 'react';
+import { getCostOfLiving, getRecommendations, type RecommendedCity } from '../api';
 
 const US_STATES = [
   'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
@@ -34,17 +34,48 @@ function ScoreBadge({ label, score }: { label: string; score: number }) {
 
 export default function SmartCityFinder() {
   const [salary, setSalary] = useState('');
+  const [originCity, setOriginCity] = useState('');
   const [state, setState] = useState('');
   const [size, setSize] = useState<'any' | 'small' | 'medium' | 'large'>('any');
   const [results, setResults] = useState<RecommendedCity[] | null>(null);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [colMap, setColMap] = useState<Record<string, number> | null>(null);
+  const [originCol, setOriginCol] = useState<number | null>(null);
+
+  useEffect(() => {
+    getCostOfLiving().then(setColMap).catch(() => setColMap({}));
+  }, []);
+
+  const lookupCol = (name: string): number | null => {
+    if (!colMap) return null;
+    const key = name.trim();
+    if (!key) return null;
+    if (colMap[key] != null) return colMap[key];
+    const lower = key.toLowerCase();
+    for (const [k, v] of Object.entries(colMap)) {
+      if (k.toLowerCase() === lower) return v;
+    }
+    return null;
+  };
 
   const handleSearch = async () => {
     setLoading(true);
     setError(null);
     setResults(null);
+
+    let resolvedOriginCol: number | null = null;
+    if (salary && originCity.trim()) {
+      resolvedOriginCol = lookupCol(originCity);
+      if (resolvedOriginCol == null) {
+        setError(`Could not find cost-of-living data for "${originCity}". Try a major city name (e.g. "New York").`);
+        setLoading(false);
+        return;
+      }
+    }
+    setOriginCol(resolvedOriginCol);
+
     try {
       const data = await getRecommendations({
         salary: salary ? parseFloat(salary) : undefined,
@@ -77,6 +108,17 @@ export default function SmartCityFinder() {
             value={salary}
             onChange={e => setSalary(e.target.value)}
             placeholder="e.g. 80000"
+            style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--color-border)', background: 'var(--color-surface-muted)', color: 'inherit', width: '160px' }}
+          />
+        </label>
+
+        <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.875rem' }}>
+          Current city (optional)
+          <input
+            type="text"
+            value={originCity}
+            onChange={e => setOriginCity(e.target.value)}
+            placeholder="e.g. New York"
             style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--color-border)', background: 'var(--color-surface-muted)', color: 'inherit', width: '160px' }}
           />
         </label>
@@ -121,6 +163,9 @@ export default function SmartCityFinder() {
         <div>
           <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '12px' }}>
             Showing top {results.length} of {total} matching cities, ranked by affordability
+            {salary && (
+              <> · Equiv. salary baseline: {originCol != null ? `${originCity.trim()} (COL ${originCol})` : 'U.S. average (COL 100)'}</>
+            )}
           </p>
           {results.length === 0 ? (
             <p>No cities match your filters.</p>
@@ -156,7 +201,11 @@ export default function SmartCityFinder() {
                     )}
                     {city.adjusted_salary != null && (
                       <span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>
-                        Equiv. salary: ${city.adjusted_salary.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                        Equiv. salary: ${(
+                          originCol != null
+                            ? city.adjusted_salary * (100 / originCol)
+                            : city.adjusted_salary
+                        ).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                       </span>
                     )}
                   </div>
