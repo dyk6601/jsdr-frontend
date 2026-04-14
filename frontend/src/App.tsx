@@ -202,11 +202,8 @@ function App() {
       <AuthBar />
 
       <h1>LiveWhere — Cost of Living Comparison Tool</h1>
-      <p>Compare cities, calculate salary adjustments, and find your ideal location</p>
 
       <div className="app-section">
-        <h2>Interactive City Map</h2>
-        <p>Click on markers to select cities for comparison (max 4)</p>
         {loadingCities && <p>Loading cities...</p>}
         {citiesError && <p className="status-error">Error loading cities: {citiesError}</p>}
         <CityMap cities={cities} onCitySelect={handleCitySelect} />
