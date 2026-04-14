@@ -83,18 +83,33 @@ const CityMap = ({ cities, onCitySelect }: CityMapProps) => {
   const defaultZoom = 4;
 
   return (
-    <div>
-      {/* Legend */}
-      <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '8px', fontSize: '0.8rem' }}>
-        <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: '#10b981', marginRight: 4 }} />Affordable (60+)</span>
-        <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: '#f59e0b', marginRight: 4 }} />Moderate (40–59)</span>
-        <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: '#ef4444', marginRight: 4 }} />Expensive (&lt;40)</span>
+    <div className="city-map-card card">
+      <div className="city-map-card-header">
+        <h2>Interactive City Map</h2>
+        <p>Click on markers to select cities for comparison (max 4)</p>
       </div>
-      <div style={{ height: '500px', width: '100%' }}>
+
+      {/* Legend */}
+      <div className="city-map-legend">
+        <span>
+          <span className="city-map-legend-dot city-map-legend-dot--affordable" />
+          Affordable (60+)
+        </span>
+        <span>
+          <span className="city-map-legend-dot city-map-legend-dot--moderate" />
+          Moderate (40–59)
+        </span>
+        <span>
+          <span className="city-map-legend-dot city-map-legend-dot--expensive" />
+          Expensive (&lt;40)
+        </span>
+      </div>
+
+      <div className="city-map-frame">
         <MapContainer
           center={defaultCenter}
           zoom={defaultZoom}
-          style={{ height: '100%', width: '100%' }}
+          className="city-map-container"
         >
           {/* OpenStreetMap tile layer for base map */}
           <TileLayer
