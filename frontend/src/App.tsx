@@ -1,12 +1,23 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import './App.css'
 import CityMap from './components/CityMap'
 import CityComparison from './components/CityComparison'
 import SalaryCalculator from './components/SalaryCalculator'
-import CitiesCard from './components/GetCities'
 import AuthBar from './components/AuthBar'
 import SmartCityFinder from './components/SmartCityFinder'
-import { getCities } from './api'
+import UserProfile from './components/UserProfile'
+import {
+  getCities,
+  getCurrentUser,
+  getUserProfile,
+  addFavorite,
+  removeFavorite,
+  saveComparison,
+  deleteComparison,
+  updateWeights,
+  type AuthUser,
+  type UserProfile as UserProfileData,
+} from './api'
 
 interface City {
   name: string;
@@ -146,12 +157,18 @@ const normalizeCity = (raw: any): City | null => {
   };
 };
 
+type Tab = 'compare' | 'profile';
+
 // Main application shell component
 function App() {
   const [cities, setCities] = useState<City[]>([]);
   const [selectedCities, setSelectedCities] = useState<City[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
   const [citiesError, setCitiesError] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>('compare');
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [profile, setProfile] = useState<UserProfileData | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   // Fetch cities from backend
   useEffect(() => {
@@ -186,6 +203,80 @@ function App() {
     };
   }, []);
 
+  // Keep auth + profile in sync (runs on mount and when user signs in/out)
+  useEffect(() => {
+    let cancelled = false;
+
+    const sync = async () => {
+      const u = await getCurrentUser();
+      if (cancelled) return;
+      setUser(u);
+
+      if (!u) {
+        setProfile(null);
+        setProfileError(null);
+        return;
+      }
+
+      try {
+        const p = await getUserProfile();
+        if (cancelled) return;
+        setProfile(p);
+        setProfileError(null);
+      } catch (e: any) {
+        if (cancelled) return;
+        setProfile(null);
+        setProfileError(e?.message || 'Failed to load profile');
+      }
+    };
+
+    void sync();
+
+    const onFocus = () => { void sync(); };
+    window.addEventListener('focus', onFocus);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', onFocus);
+    };
+  }, []);
+
+  const handleAddFavorite = useCallback(async (name: string, stateCode: string) => {
+    const favorites = await addFavorite(name, stateCode);
+    setProfile(prev => prev ? { ...prev, favorites } : prev);
+  }, []);
+
+  const handleRemoveFavorite = useCallback(async (name: string, stateCode: string) => {
+    const favorites = await removeFavorite(name, stateCode);
+    setProfile(prev => prev ? { ...prev, favorites } : prev);
+  }, []);
+
+  const handleSaveComparison = useCallback(
+    async (name: string, cs: City[]) => {
+      const payload = cs
+        .filter(c => c.state_code)
+        .map(c => ({ name: c.name, state_code: c.state_code as string }));
+      if (payload.length === 0) return;
+      const saved_comparisons = await saveComparison(name, payload);
+      setProfile(prev => prev ? { ...prev, saved_comparisons } : prev);
+    },
+    [],
+  );
+
+  const handleDeleteComparison = useCallback(async (id: string) => {
+    const saved_comparisons = await deleteComparison(id);
+    setProfile(prev => prev ? { ...prev, saved_comparisons } : prev);
+  }, []);
+
+  const handleWeightsChange = useCallback(async (weights: Record<string, number>) => {
+    const saved = await updateWeights(weights);
+    setProfile(prev => prev ? { ...prev, weights: saved } : prev);
+  }, []);
+
+  const handleLoadComparison = useCallback((cs: City[]) => {
+    setSelectedCities(cs.slice(0, 4));
+    setTab('compare');
+  }, []);
+
   const handleCitySelect = (city: City) => {
     // Add city to comparison if not already selected (max 4 cities)
     if (
@@ -208,55 +299,101 @@ function App() {
     setSelectedCities([]);
   };
 
+  const favoriteKeys = new Set(
+    (profile?.favorites ?? []).map(f => `${f.name}|${f.state_code}`),
+  );
+
   return (
     <div className="app-shell">
       <AuthBar />
 
       <h1>LiveWhere — Cost of Living Comparison Tool</h1>
 
-      <div className="app-section">
-        {loadingCities && <p>Loading cities...</p>}
-        {citiesError && <p className="status-error">Error loading cities: {citiesError}</p>}
-        <CityMap cities={cities} onCitySelect={handleCitySelect} />
-        {selectedCities.length > 0 && (
-          <div className="selected-city-list">
-            {selectedCities.map(city => (
+      <nav className="app-tabs" style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '16px' }}>
+        <button
+          type="button"
+          className={tab === 'compare' ? 'selected-city-chip' : 'clear-selection-button'}
+          onClick={() => setTab('compare')}
+        >
+          Compare
+        </button>
+        <button
+          type="button"
+          className={tab === 'profile' ? 'selected-city-chip' : 'clear-selection-button'}
+          onClick={() => setTab('profile')}
+        >
+          My Profile
+        </button>
+      </nav>
+
+      {tab === 'compare' && (
+        <>
+          <div className="app-section">
+            {loadingCities && <p>Loading cities...</p>}
+            {citiesError && <p className="status-error">Error loading cities: {citiesError}</p>}
+            <CityMap cities={cities} onCitySelect={handleCitySelect} />
+            {selectedCities.length > 0 && (
+              <div className="selected-city-list">
+                {selectedCities.map(city => (
+                  <button
+                    key={`${city.name}-${city.state_code ?? ''}`}
+                    className="selected-city-chip"
+                    onClick={() => removeSelectedCity(city)}
+                    title={`Remove ${city.name}${city.state_code ? `, ${city.state_code}` : ''}`}
+                  >
+                    {city.name}{city.state_code ? `, ${city.state_code}` : ''}
+                    <span aria-hidden="true">×</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {selectedCities.length > 0 && (
               <button
-                key={`${city.name}-${city.state_code ?? ''}`}
-                className="selected-city-chip"
-                onClick={() => removeSelectedCity(city)}
-                title={`Remove ${city.name}${city.state_code ? `, ${city.state_code}` : ''}`}
+                onClick={clearSelection}
+                className="clear-selection-button"
               >
-                {city.name}{city.state_code ? `, ${city.state_code}` : ''}
-                <span aria-hidden="true">×</span>
+                Clear Selection
               </button>
-            ))}
+            )}
           </div>
-        )}
-        {selectedCities.length > 0 && (
-          <button
-            onClick={clearSelection}
-            className="clear-selection-button"
-          >
-            Clear Selection
-          </button>
-        )}
-      </div>
 
-      <div className="app-section">
-        <CityComparison cities={selectedCities} onRemoveCity={removeSelectedCity} />
-      </div>
+          <div className="app-section">
+            <CityComparison
+              cities={selectedCities}
+              onRemoveCity={removeSelectedCity}
+              authed={Boolean(user)}
+              weights={profile?.weights}
+              onWeightsChange={user ? handleWeightsChange : undefined}
+              favoriteKeys={favoriteKeys}
+              onAddFavorite={user ? handleAddFavorite : undefined}
+              onRemoveFavorite={user ? handleRemoveFavorite : undefined}
+              onSaveComparison={user ? handleSaveComparison : undefined}
+            />
+          </div>
 
-      <div className="app-section">
-        <SalaryCalculator />
-      </div>
+          <div className="app-section">
+            <SalaryCalculator />
+          </div>
 
-      <div className="app-section">
-        <SmartCityFinder />
-      </div>
+          <div className="app-section">
+            <SmartCityFinder />
+          </div>
+        </>
+      )}
 
-      <div className="app-section">
-      </div>
+      {tab === 'profile' && (
+        <div className="app-section">
+          <UserProfile
+            user={user}
+            profile={profile}
+            profileError={profileError}
+            onRemoveFavorite={handleRemoveFavorite}
+            onDeleteComparison={handleDeleteComparison}
+            onLoadComparison={handleLoadComparison}
+            allCities={cities}
+          />
+        </div>
+      )}
     </div>
   )
 }

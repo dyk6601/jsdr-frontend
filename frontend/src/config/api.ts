@@ -30,6 +30,18 @@ export const API_ENDPOINTS = {
   AUTH_LOGOUT: "/auth/logout",
   /** GET — ranked city recommendations with optional filters. */
   RECOMMENDATIONS: "/recommendations",
+  /** GET — user profile (favorites, saved comparisons, weights). */
+  PROFILE: "/auth/me/profile",
+  /** POST — add a favorite city. */
+  FAVORITES: "/auth/me/favorites",
+  /** DELETE — remove favorite by "Name|ST" key. */
+  FAVORITE_ITEM: (key: string) => `/auth/me/favorites/${encodeURIComponent(key)}`,
+  /** POST — save a comparison. */
+  COMPARISONS: "/auth/me/comparisons",
+  /** DELETE — remove saved comparison by id. */
+  COMPARISON_ITEM: (id: string) => `/auth/me/comparisons/${encodeURIComponent(id)}`,
+  /** PUT — persist category weights. */
+  WEIGHTS: "/auth/me/weights",
 } as const
 
 /** Full URLs: API_BASE_URL + path. */
@@ -47,4 +59,12 @@ export const API_URLS = {
   AUTH_ME: `${API_BASE_URL}${API_ENDPOINTS.AUTH_ME}`,
   AUTH_LOGOUT: `${API_BASE_URL}${API_ENDPOINTS.AUTH_LOGOUT}`,
   RECOMMENDATIONS: `${API_BASE_URL}${API_ENDPOINTS.RECOMMENDATIONS}`,
+  PROFILE: `${API_BASE_URL}${API_ENDPOINTS.PROFILE}`,
+  FAVORITES: `${API_BASE_URL}${API_ENDPOINTS.FAVORITES}`,
+  FAVORITE_ITEM: (key: string) =>
+    `${API_BASE_URL}${API_ENDPOINTS.FAVORITE_ITEM(key)}`,
+  COMPARISONS: `${API_BASE_URL}${API_ENDPOINTS.COMPARISONS}`,
+  COMPARISON_ITEM: (id: string) =>
+    `${API_BASE_URL}${API_ENDPOINTS.COMPARISON_ITEM(id)}`,
+  WEIGHTS: `${API_BASE_URL}${API_ENDPOINTS.WEIGHTS}`,
 } as const

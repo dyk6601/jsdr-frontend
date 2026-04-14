@@ -145,8 +145,11 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     if (res.status === 404) return null
     if (!res.ok) return null
     const body = await res.json()
-    if (body && typeof body === 'object' && typeof (body as AuthUser).email === 'string') {
-      return body as AuthUser
+    const user = (body && typeof body === 'object' && 'user' in body)
+      ? (body as { user?: AuthUser }).user
+      : (body as AuthUser)
+    if (user && typeof user.email === 'string') {
+      return user
     }
     return null
   } catch {
@@ -163,7 +166,7 @@ export async function signOut(): Promise<void> {
   if (!res.ok) throw new Error(`signOut failed: ${res.status}`)
 }
 
-// --- Recommendations ---
+// --- Recommendations types ---
 
 export type RecommendedCity = {
   name: string
@@ -181,6 +184,111 @@ export type RecommendationsResult = {
   recommendations: RecommendedCity[]
   total: number
 }
+
+// --- User profile (favorites, saved comparisons, weights) ---
+
+export type FavoriteCity = {
+  name: string
+  state_code: string
+  added_at?: string
+}
+
+export type SavedComparisonCity = {
+  name: string
+  state_code: string
+}
+
+export type SavedComparison = {
+  id: string
+  name: string
+  cities: SavedComparisonCity[]
+  created_at?: string
+}
+
+export type UserProfile = {
+  user_id: string
+  favorites: FavoriteCity[]
+  saved_comparisons: SavedComparison[]
+  weights: Record<string, number>
+  updated_at?: string
+}
+
+function cityKey(name: string, stateCode: string): string {
+  return `${name}|${stateCode}`
+}
+
+export async function getUserProfile(): Promise<UserProfile | null> {
+  const res = await apiFetch(API_URLS.PROFILE)
+  if (res.status === 401) return null
+  if (!res.ok) throw new Error(`getUserProfile failed: ${res.status}`)
+  return await res.json()
+}
+
+export async function addFavorite(
+  name: string,
+  stateCode: string,
+): Promise<FavoriteCity[]> {
+  const res = await apiFetch(API_URLS.FAVORITES, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, state_code: stateCode }),
+  })
+  if (!res.ok) throw new Error(`addFavorite failed: ${res.status}`)
+  const body = await res.json()
+  return body.favorites ?? []
+}
+
+export async function removeFavorite(
+  name: string,
+  stateCode: string,
+): Promise<FavoriteCity[]> {
+  const res = await apiFetch(API_URLS.FAVORITE_ITEM(cityKey(name, stateCode)), {
+    method: 'DELETE',
+  })
+  if (!res.ok) throw new Error(`removeFavorite failed: ${res.status}`)
+  const body = await res.json()
+  return body.favorites ?? []
+}
+
+export async function saveComparison(
+  name: string,
+  cities: SavedComparisonCity[],
+): Promise<SavedComparison[]> {
+  const res = await apiFetch(API_URLS.COMPARISONS, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, cities }),
+  })
+  if (!res.ok) throw new Error(`saveComparison failed: ${res.status}`)
+  const body = await res.json()
+  return body.saved_comparisons ?? []
+}
+
+export async function deleteComparison(
+  id: string,
+): Promise<SavedComparison[]> {
+  const res = await apiFetch(API_URLS.COMPARISON_ITEM(id), {
+    method: 'DELETE',
+  })
+  if (!res.ok) throw new Error(`deleteComparison failed: ${res.status}`)
+  const body = await res.json()
+  return body.saved_comparisons ?? []
+}
+
+export async function updateWeights(
+  weights: Record<string, number>,
+): Promise<Record<string, number>> {
+  const res = await apiFetch(API_URLS.WEIGHTS, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ weights }),
+  })
+  if (!res.ok) throw new Error(`updateWeights failed: ${res.status}`)
+  const body = await res.json()
+  return body.weights ?? {}
+}
+
+// --- Recommendations ---
 
 export async function getRecommendations(params: {
   salary?: number

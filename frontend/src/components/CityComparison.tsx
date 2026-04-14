@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
@@ -14,6 +14,13 @@ interface City {
 interface CityComparisonProps {
   cities: City[];
   onRemoveCity?: (city: City) => void;
+  authed?: boolean;
+  weights?: Record<string, number>;
+  onWeightsChange?: (weights: Record<string, number>) => Promise<void>;
+  favoriteKeys?: Set<string>;
+  onAddFavorite?: (name: string, stateCode: string) => Promise<void>;
+  onRemoveFavorite?: (name: string, stateCode: string) => Promise<void>;
+  onSaveComparison?: (name: string, cities: City[]) => Promise<void>;
 }
 
 const CITY_COLORS = ['#6366f1', '#f59e0b', '#10b981', '#ef4444'];
@@ -71,10 +78,31 @@ function scoreColor(score: number): string {
   return '#ef4444';
 }
 
-const CityComparison = ({ cities, onRemoveCity }: CityComparisonProps) => {
+const CityComparison = ({
+  cities,
+  onRemoveCity,
+  authed = false,
+  weights: weightsProp,
+  onWeightsChange,
+  favoriteKeys,
+  onAddFavorite,
+  onRemoveFavorite,
+  onSaveComparison,
+}: CityComparisonProps) => {
   const [colData, setColData] = useState<Record<string, number>>({});
   const [colError, setColError] = useState<string | null>(null);
-  const [weights, setWeights] = useState<Record<string, number>>(DEFAULT_WEIGHTS);
+  const [weights, setWeights] = useState<Record<string, number>>(
+    weightsProp ?? DEFAULT_WEIGHTS,
+  );
+  const [favBusy, setFavBusy] = useState<string | null>(null);
+  const [saveBusy, setSaveBusy] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const weightsDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sync weights when the authenticated profile supplies them
+  useEffect(() => {
+    if (weightsProp) setWeights(weightsProp);
+  }, [weightsProp]);
 
   useEffect(() => {
     if (cities.length === 0) return;
@@ -82,6 +110,52 @@ const CityComparison = ({ cities, onRemoveCity }: CityComparisonProps) => {
       .then(setColData)
       .catch((e: any) => setColError(e?.message || 'Failed to load cost-of-living data'));
   }, [cities.length]);
+
+  const updateWeight = (key: string, value: number) => {
+    setWeights(prev => {
+      const next = { ...prev, [key]: value };
+      if (onWeightsChange) {
+        if (weightsDebounceRef.current) clearTimeout(weightsDebounceRef.current);
+        weightsDebounceRef.current = setTimeout(() => {
+          void onWeightsChange(next);
+        }, 400);
+      }
+      return next;
+    });
+  };
+
+  const cityKey = (c: City) => `${c.name}|${c.state_code ?? ''}`;
+
+  const handleToggleFavorite = async (city: City) => {
+    if (!authed || !city.state_code) return;
+    const key = cityKey(city);
+    const isFav = favoriteKeys?.has(key) ?? false;
+    setFavBusy(key);
+    try {
+      if (isFav) {
+        if (onRemoveFavorite) await onRemoveFavorite(city.name, city.state_code);
+      } else {
+        if (onAddFavorite) await onAddFavorite(city.name, city.state_code);
+      }
+    } finally {
+      setFavBusy(null);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!onSaveComparison || cities.length === 0) return;
+    const name = window.prompt('Name this comparison:');
+    if (!name || !name.trim()) return;
+    setSaveBusy(true);
+    setSaveError(null);
+    try {
+      await onSaveComparison(name.trim(), cities);
+    } catch (e: any) {
+      setSaveError(e?.message || 'Failed to save comparison');
+    } finally {
+      setSaveBusy(false);
+    }
+  };
 
   if (cities.length === 0) {
     return (
@@ -121,6 +195,23 @@ const CityComparison = ({ cities, onRemoveCity }: CityComparisonProps) => {
     <div style={{ padding: '20px' }}>
       <h2>City Comparison</h2>
 
+      {/* Save comparison */}
+      {authed && onSaveComparison && cities.length > 0 && (
+        <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+          <button
+            type="button"
+            className="selected-city-chip"
+            onClick={() => void handleSave()}
+            disabled={saveBusy}
+          >
+            {saveBusy ? 'Saving...' : 'Save comparison'}
+          </button>
+          {saveError && (
+            <p className="status-error" style={{ marginTop: '6px' }}>{saveError}</p>
+          )}
+        </div>
+      )}
+
       {/* City summary cards */}
       <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '28px', justifyContent: 'center' }}>
         {cities.map((city, idx) => {
@@ -150,6 +241,32 @@ const CityComparison = ({ cities, onRemoveCity }: CityComparisonProps) => {
                   ×
                 </button>
               )}
+              {authed && city.state_code && (onAddFavorite || onRemoveFavorite) && (() => {
+                const key = cityKey(city);
+                const isFav = favoriteKeys?.has(key) ?? false;
+                return (
+                  <button
+                    type="button"
+                    onClick={() => void handleToggleFavorite(city)}
+                    disabled={favBusy === key}
+                    aria-label={isFav ? 'Remove from favorites' : 'Add to favorites'}
+                    title={isFav ? 'Unfavorite' : 'Favorite'}
+                    style={{
+                      position: 'absolute',
+                      top: '8px',
+                      left: '8px',
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '1.1rem',
+                      color: isFav ? '#f59e0b' : 'var(--color-text-muted, #999)',
+                      padding: 0,
+                    }}
+                  >
+                    {isFav ? '★' : '☆'}
+                  </button>
+                );
+              })()}
               <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '6px' }}>
                 {city.name}{city.state_code ? `, ${city.state_code}` : ''}
               </div>
@@ -196,7 +313,7 @@ const CityComparison = ({ cities, onRemoveCity }: CityComparisonProps) => {
                 max={5}
                 step={1}
                 value={weights[key] ?? 0}
-                onChange={e => setWeights(prev => ({ ...prev, [key]: Number(e.target.value) }))}
+                onChange={e => updateWeight(key, Number(e.target.value))}
                 style={{ flex: 1 }}
               />
               <span style={{ minWidth: '20px', fontSize: '0.875rem', textAlign: 'right' }}>
