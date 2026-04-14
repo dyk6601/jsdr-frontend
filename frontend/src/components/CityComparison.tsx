@@ -41,6 +41,11 @@ const DEFAULT_WEIGHTS: Record<string, number> = {
   Entertainment: 1,
 };
 
+/** Raw affordability score — matches the map and SmartCityFinder exactly. */
+function affordabilityScore(colIndex: number): number {
+  return Math.round(Math.max(0, Math.min(100, ((105 - colIndex) / 70) * 100)));
+}
+
 // Baseline: ~$60k income at NYC-level COL (index 100) maps to a score of 50.
 // Doubling purchasing power (same income at half COL, or double income at same COL) → 100.
 const BASELINE_INCOME = 60000;
@@ -216,7 +221,8 @@ const CityComparison = ({
       <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '28px', justifyContent: 'center' }}>
         {cities.map((city, idx) => {
           const colIdx = getColIndex(city.name);
-          const score = colIdx !== null ? weightedAffordability(colIdx, weights, city.average_salary ?? null) : null;
+          const score = colIdx !== null ? affordabilityScore(colIdx) : null;
+          const priorityScore = colIdx !== null ? weightedAffordability(colIdx, weights, city.average_salary ?? null) : null;
           return (
             <div
               key={idx}
@@ -290,6 +296,11 @@ const CityComparison = ({
                   Affordability: {score}/100
                 </div>
               )}
+              {priorityScore !== null && priorityScore !== score && (
+                <div style={{ marginTop: '4px', fontSize: '0.8rem', color: scoreColor(priorityScore) }}>
+                  Priority score: {priorityScore}/100
+                </div>
+              )}
             </div>
           );
         })}
@@ -302,7 +313,7 @@ const CityComparison = ({
         <div style={{ marginBottom: '28px', maxWidth: '480px', margin: '0 auto 28px' }}>
           <h3 style={{ marginBottom: '12px' }}>Spending Priorities</h3>
           <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: 0 }}>
-            Adjust how much each category matters to you — this updates the affordability score.
+            Adjust how much each category matters to you — this updates the priority score.
           </p>
           {CATEGORIES.map(({ key }) => (
             <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
