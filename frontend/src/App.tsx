@@ -256,8 +256,6 @@ function App() {
       </div>
 
       <div className="app-section">
-        <h2>All Cities Data</h2>
-        <CitiesCard />
       </div>
     </div>
   )
