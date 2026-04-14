@@ -33,13 +33,18 @@ const DEFAULT_WEIGHTS: Record<string, number> = {
   Entertainment: 1,
 };
 
+/** Raw affordability score — matches the map and SmartCityFinder exactly. */
+function affordabilityScore(colIndex: number): number {
+  return Math.round(Math.max(0, Math.min(100, ((105 - colIndex) / 70) * 100)));
+}
+
 function categoryScore(colIndex: number, ratio: number): number {
   const MAX_COL = 105;
   const MIN_COL = 35;
   return Math.max(0, Math.min(100, ((MAX_COL - colIndex * ratio) / (MAX_COL - MIN_COL)) * 100));
 }
 
-function weightedAffordability(colIndex: number, weights: Record<string, number>): number {
+function weightedPriorityScore(colIndex: number, weights: Record<string, number>): number {
   const totalWeight = CATEGORIES.reduce((s, c) => s + (weights[c.key] ?? 0), 0);
   if (totalWeight === 0) return 0;
   const weightedSum = CATEGORIES.reduce(
@@ -109,7 +114,8 @@ const CityComparison = ({ cities }: CityComparisonProps) => {
       <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '28px', justifyContent: 'center' }}>
         {cities.map((city, idx) => {
           const colIdx = getColIndex(city.name);
-          const score = colIdx !== null ? weightedAffordability(colIdx, weights) : null;
+          const score = colIdx !== null ? affordabilityScore(colIdx) : null;
+          const priorityScore = colIdx !== null ? weightedPriorityScore(colIdx, weights) : null;
           return (
             <div
               key={idx}
@@ -143,6 +149,11 @@ const CityComparison = ({ cities }: CityComparisonProps) => {
               {score !== null && (
                 <div style={{ marginTop: '8px', fontWeight: 700, fontSize: '1.1rem', color: scoreColor(score) }}>
                   Affordability: {score}/100
+                </div>
+              )}
+              {priorityScore !== null && priorityScore !== score && (
+                <div style={{ marginTop: '4px', fontSize: '0.8rem', color: scoreColor(priorityScore) }}>
+                  Priority score: {priorityScore}/100
                 </div>
               )}
             </div>
