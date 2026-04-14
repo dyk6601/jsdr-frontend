@@ -13,6 +13,7 @@ interface City {
 
 interface CityComparisonProps {
   cities: City[];
+  onRemoveCity?: (city: City) => void;
 }
 
 const CITY_COLORS = ['#6366f1', '#f59e0b', '#10b981', '#ef4444'];
@@ -55,7 +56,7 @@ function scoreColor(score: number): string {
   return '#ef4444';
 }
 
-const CityComparison = ({ cities }: CityComparisonProps) => {
+const CityComparison = ({ cities, onRemoveCity }: CityComparisonProps) => {
   const [colData, setColData] = useState<Record<string, number>>({});
   const [colError, setColError] = useState<string | null>(null);
   const [weights, setWeights] = useState<Record<string, number>>(DEFAULT_WEIGHTS);
@@ -120,8 +121,20 @@ const CityComparison = ({ cities }: CityComparisonProps) => {
                 borderRadius: '10px',
                 padding: '14px',
                 textAlign: 'center',
+                position: 'relative',
               }}
             >
+              {onRemoveCity && (
+                <button
+                  type="button"
+                  onClick={() => onRemoveCity(city)}
+                  className="remove-city-button"
+                  aria-label={`Remove ${city.name}${city.state_code ? `, ${city.state_code}` : ''} from comparison`}
+                  title="Remove city"
+                >
+                  ×
+                </button>
+              )}
               <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '6px' }}>
                 {city.name}{city.state_code ? `, ${city.state_code}` : ''}
               </div>
@@ -210,7 +223,7 @@ const CityComparison = ({ cities }: CityComparisonProps) => {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
-              <Tooltip formatter={(v: number) => v.toLocaleString()} />
+              <Tooltip formatter={v => (typeof v === 'number' ? v.toLocaleString() : String(v ?? ''))} />
               <Bar dataKey="population" fill="#6366f1" />
             </BarChart>
           </ResponsiveContainer>

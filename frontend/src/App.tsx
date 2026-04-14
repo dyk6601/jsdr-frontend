@@ -188,9 +188,20 @@ function App() {
 
   const handleCitySelect = (city: City) => {
     // Add city to comparison if not already selected (max 4 cities)
-    if (selectedCities.length < 4 && !selectedCities.find(c => c.name === city.name)) {
+    if (
+      selectedCities.length < 4
+      && !selectedCities.find(
+        c => c.name === city.name && c.state_code === city.state_code,
+      )
+    ) {
       setSelectedCities([...selectedCities, city]);
     }
+  };
+
+  const removeSelectedCity = (cityToRemove: City) => {
+    setSelectedCities(prev => prev.filter(
+      city => !(city.name === cityToRemove.name && city.state_code === cityToRemove.state_code),
+    ));
   };
 
   const clearSelection = () => {
@@ -208,6 +219,21 @@ function App() {
         {citiesError && <p className="status-error">Error loading cities: {citiesError}</p>}
         <CityMap cities={cities} onCitySelect={handleCitySelect} />
         {selectedCities.length > 0 && (
+          <div className="selected-city-list">
+            {selectedCities.map(city => (
+              <button
+                key={`${city.name}-${city.state_code ?? ''}`}
+                className="selected-city-chip"
+                onClick={() => removeSelectedCity(city)}
+                title={`Remove ${city.name}${city.state_code ? `, ${city.state_code}` : ''}`}
+              >
+                {city.name}{city.state_code ? `, ${city.state_code}` : ''}
+                <span aria-hidden="true">×</span>
+              </button>
+            ))}
+          </div>
+        )}
+        {selectedCities.length > 0 && (
           <button
             onClick={clearSelection}
             className="clear-selection-button"
@@ -218,7 +244,7 @@ function App() {
       </div>
 
       <div className="app-section">
-        <CityComparison cities={selectedCities} />
+        <CityComparison cities={selectedCities} onRemoveCity={removeSelectedCity} />
       </div>
 
       <div className="app-section">
