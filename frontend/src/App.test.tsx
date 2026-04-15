@@ -3,34 +3,42 @@ import { describe, it, expect } from 'vitest';
 import App from './App';
 
 describe('App', () => {
-  it('renders the main heading', () => {
+  it('renders the new hero heading', () => {
     render(<App />);
     expect(
-      screen.getByText(/LiveWhere — Cost of Living Comparison Tool/i)
+      screen.getByText(/Plan where to live with confidence/i)
     ).toBeInTheDocument();
   });
 
-  it('renders the subtitle text', () => {
+  it('renders the new hero subtitle text', () => {
     render(<App />);
     expect(
-      screen.getByText(/Compare cities, calculate salary adjustments/i)
+      screen.getByText(/Explore city affordability, compare purchasing power, and save personalized insights./i)
     ).toBeInTheDocument();
   });
-  it('renders the Interactive City Map section', () => {
+
+  it('shows the primary navigation options', () => {
     render(<App />);
-    expect(screen.getByText(/Interactive City Map/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Home/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /City Comparison/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Salary Calculator/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Smart City Finder/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /My Profile/i })).toBeInTheDocument();
   });
 
-  it('renders the All Cities Data section', () => {
+  it('renders the home planner cards', () => {
     render(<App />);
-    expect(screen.getByText(/All Cities Data/i)).toBeInTheDocument();
+    expect(screen.getByText(/Interactive City Comparison/i)).toBeInTheDocument();
+    expect(screen.getByText(/Salary Adjustment Calculator/i)).toBeInTheDocument();
+    expect(screen.getByText(/Your Saved Profile/i)).toBeInTheDocument();
   });
 
-  it('renders map instructions for selecting cities', () => {
+  it('offers action buttons to open each planner page', () => {
     render(<App />);
-    expect(
-      screen.getByText(/Click on markers to select cities for comparison \(max 4\)/i)
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Open Comparison/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Open Calculator/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Find Cities/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Open Profile/i })).toBeInTheDocument();
   });
 
   it('offers Google sign-in with auth URL', async () => {
