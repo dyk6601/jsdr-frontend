@@ -1,3 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,700&display=swap');
+
 /* App layout */
 #root {
   max-width: 1200px;
@@ -11,11 +15,31 @@
 }
 
 .app-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
   margin-bottom: var(--space-5);
   text-align: left;
+  min-height: 0;
   background:
     radial-gradient(circle at 90% 0%, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 48%),
     linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 92%, #fff), var(--color-surface));
+}
+
+.app-hero-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.app-logo {
+  flex: 0 0 auto;
+  display: block;
+  width: clamp(5rem, 10vw, 7rem);
+  height: auto;
+  margin: 0;
+  border-radius: 1rem;
+  box-shadow: 0 10px 30px rgb(15 23 42 / 10%);
 }
 
 .app-kicker {
@@ -29,6 +53,47 @@
 
 .app-hero h1 {
   margin: var(--space-2) 0;
+}
+
+/* Hero title styling: split line plus accent */
+.hero-title {
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-weight: 900;
+  font-size: clamp(2rem, 6vw, 4.5rem);
+  line-height: 0.95;
+  margin: var(--space-2) 0;
+  color: var(--color-text, #0b1220);
+}
+
+.hero-title .hero-accent {
+  display: block;
+  font-family: 'Cormorant Garamond', 'Times New Roman', serif;
+  font-style: italic;
+  font-weight: 700;
+  color: #5545b8;
+  font-size: 1.1em;
+  line-height: 0.88;
+  letter-spacing: -0.008em;
+  margin-top: 0.02em;
+}
+
+@media (max-width: 520px) {
+  .app-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .app-logo {
+    width: clamp(4rem, 20vw, 5rem);
+    align-self: flex-end;
+  }
+
+  .hero-title {
+    font-size: clamp(1.5rem, 8vw, 2.25rem);
+  }
+  .hero-title .hero-accent {
+    font-size: 1.02em;
+  }
 }
 
 .app-subtitle {
@@ -72,27 +137,115 @@
 
 .home-grid {
   display: grid;
-  gap: var(--space-4);
+  gap: clamp(1rem, 2vw, 1.5rem);
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
 .feature-card {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-5);
+  min-height: 420px;
+  padding: clamp(1.3rem, 2.4vw, 2rem);
+  border-radius: 1.8rem;
+  border: 1px solid #e4dfd7;
+  box-shadow: none;
+  background: #fff;
+  color: #232323;
 }
 
 .feature-card h3 {
   margin: 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(2rem, 1.9vw, 2.45rem);
+  line-height: 1.05;
+  font-weight: 700;
 }
 
 .feature-card p {
   margin: 0;
-  color: var(--color-text-muted);
+  font-size: clamp(1rem, 1.2vw, 1.12rem);
+  line-height: 1.45;
+  color: #8a877f;
 }
 
-.feature-card button {
+.feature-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 1.2rem;
+  background: #efeef9;
+  color: #4f45aa;
+}
+
+.feature-card-icon svg {
+  width: 2.05rem;
+  height: 2.05rem;
+}
+
+.feature-card-icon svg * {
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.feature-card-link {
+  margin-top: auto;
   align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  color: #4f45aa;
+  font-size: clamp(1rem, 1.6vw, 1.55rem);
+  font-weight: 600;
+  line-height: 1.1;
+  text-align: left;
+}
+
+.feature-card-link:hover {
+  background: transparent;
+  color: #3f3794;
+  transform: none;
+}
+
+.feature-card-link:focus,
+.feature-card-link:focus-visible {
+  outline: 3px solid color-mix(in srgb, #4f45aa 30%, transparent);
+  outline-offset: 6px;
+}
+
+.feature-card-arrow {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  font-size: 1.5rem;
+  line-height: 1;
+  background: color-mix(in srgb, #4f45aa 10%, #fff);
+}
+
+@media (max-width: 1100px) {
+  .feature-card {
+    min-height: 360px;
+  }
+
+  .feature-card h3 {
+    font-size: clamp(1.7rem, 3.8vw, 2.1rem);
+  }
+
+  .feature-card-link {
+    font-size: clamp(1rem, 2.8vw, 1.25rem);
+  }
 }
 
 .feature-shell {
@@ -474,5 +627,20 @@
   .city-map-container {
     height: 400px;
   }
+}
+
+.hero-title {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 800;
+  font-size: 2.25rem;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin: 0.25rem 0;
+  color: var(--hero-color, #0b1220);
+}
+
+/* small tweak for very small screens */
+@media (max-width: 480px) {
+  .hero-title { font-size: 1.6rem; }
 }
 

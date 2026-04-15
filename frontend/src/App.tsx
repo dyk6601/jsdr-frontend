@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import './App.css'
+import logo from './assets/logo.png'
 import CityMap from './components/CityMap'
 import CityComparison from './components/CityComparison'
 import SalaryCalculator from './components/SalaryCalculator'
@@ -383,11 +384,17 @@ function App() {
       <AuthBar />
 
       <header className="app-hero card">
-        <p className="app-kicker">LiveWhere</p>
-        <h1>Plan where to live with confidence</h1>
-        <p className="app-subtitle">
-          Explore city affordability, compare purchasing power, and save personalized insights.
-        </p>
+        <div className="app-hero-copy">
+          <p className="app-kicker">LiveWhere</p>
+          <h1 className="hero-title">
+            Plan where to live
+            <span className="hero-accent">with confidence</span>
+          </h1>
+          <p className="app-subtitle">
+            Explore city affordability, compare purchasing power, and save personalized insights.
+          </p>
+        </div>
+        <img className="app-logo" src={logo} alt="LiveWhere logo" />
       </header>
 
       <nav className="app-nav" aria-label="Primary">
@@ -405,24 +412,62 @@ function App() {
       {page === 'home' && (
         <div className="home-grid">
           <article className="card feature-card">
-            <h3>Interactive City Comparison</h3>
-            <p>Select up to 4 cities on a map and compare cost-of-living signals side by side.</p>
-            <button type="button" onClick={() => navigateTo('compare')}>Open Comparison</button>
+            <span className="feature-card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" role="presentation">
+                <rect x="4" y="4" width="6" height="6" rx="1.5" fill="currentColor" />
+                <rect x="14" y="4" width="6" height="6" rx="1.5" fill="currentColor" />
+                <rect x="4" y="14" width="6" height="6" rx="1.5" fill="currentColor" />
+                <rect x="14" y="14" width="6" height="6" rx="1.5" fill="currentColor" />
+              </svg>
+            </span>
+            <h3>Interactive city comparison</h3>
+            <p>Select up to 4 cities and compare cost-of-living signals side by side on a live map.</p>
+            <button className="feature-card-link" type="button" onClick={() => navigateTo('compare')}>
+              <span>Open comparison</span>
+              <span className="feature-card-arrow" aria-hidden="true">→</span>
+            </button>
           </article>
           <article className="card feature-card">
-            <h3>Salary Adjustment Calculator</h3>
-            <p>Estimate how much salary you need to keep the same purchasing power after moving.</p>
-            <button type="button" onClick={() => navigateTo('salary')}>Open Calculator</button>
+            <span className="feature-card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" role="presentation">
+                <circle cx="12" cy="12" r="8" />
+                <path d="M12 8v4l2.6 2.6" />
+              </svg>
+            </span>
+            <h3>Salary adjustment calculator</h3>
+            <p>Estimate how much you need to earn to keep the same purchasing power after moving.</p>
+            <button className="feature-card-link" type="button" onClick={() => navigateTo('salary')}>
+              <span>Open calculator</span>
+              <span className="feature-card-arrow" aria-hidden="true">→</span>
+            </button>
           </article>
           <article className="card feature-card">
-            <h3>Smart City Finder</h3>
+            <span className="feature-card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" role="presentation">
+                <circle cx="11" cy="11" r="6.5" />
+                <path d="m16 16 4 4" />
+              </svg>
+            </span>
+            <h3>Smart city finder</h3>
             <p>Filter cities by your preferences and discover top affordability matches quickly.</p>
-            <button type="button" onClick={() => navigateTo('finder')}>Find Cities</button>
+            <button className="feature-card-link" type="button" onClick={() => navigateTo('finder')}>
+              <span>Find cities</span>
+              <span className="feature-card-arrow" aria-hidden="true">→</span>
+            </button>
           </article>
           <article className="card feature-card">
-            <h3>Your Saved Profile</h3>
-            <p>Sign in to keep favorites, saved comparisons, and weighting preferences in one place.</p>
-            <button type="button" onClick={() => navigateTo('profile')}>Open Profile</button>
+            <span className="feature-card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" role="presentation">
+                <circle cx="12" cy="8.5" r="3" />
+                <path d="M6 19a6 6 0 0 1 12 0" />
+              </svg>
+            </span>
+            <h3>Your saved profile</h3>
+            <p>Sign in to keep favorites, saved comparisons, and weighting preferences.</p>
+            <button className="feature-card-link" type="button" onClick={() => navigateTo('profile')}>
+              <span>Open profile</span>
+              <span className="feature-card-arrow" aria-hidden="true">→</span>
+            </button>
           </article>
         </div>
       )}
