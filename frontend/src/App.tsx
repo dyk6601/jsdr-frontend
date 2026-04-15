@@ -157,7 +157,38 @@ const normalizeCity = (raw: any): City | null => {
   };
 };
 
-type Tab = 'compare' | 'profile';
+type Page = 'home' | 'compare' | 'salary' | 'finder' | 'profile';
+
+const routeToPage = (hash: string): Page => {
+  const route = hash.replace(/^#/, '').trim();
+  switch (route) {
+    case '/compare':
+      return 'compare';
+    case '/salary':
+      return 'salary';
+    case '/finder':
+      return 'finder';
+    case '/profile':
+      return 'profile';
+    default:
+      return 'home';
+  }
+};
+
+const pageToRoute = (page: Page): string => {
+  switch (page) {
+    case 'compare':
+      return '#/compare';
+    case 'salary':
+      return '#/salary';
+    case 'finder':
+      return '#/finder';
+    case 'profile':
+      return '#/profile';
+    default:
+      return '#/';
+  }
+};
 
 // Main application shell component
 function App() {
@@ -165,10 +196,31 @@ function App() {
   const [selectedCities, setSelectedCities] = useState<City[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
   const [citiesError, setCitiesError] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>('compare');
+  const [page, setPage] = useState<Page>(() => routeToPage(window.location.hash));
   const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<UserProfileData | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
+
+  // Keep page in sync with URL hash
+  useEffect(() => {
+    const syncRoute = () => {
+      setPage(routeToPage(window.location.hash));
+    };
+    window.addEventListener('hashchange', syncRoute);
+    syncRoute();
+    return () => {
+      window.removeEventListener('hashchange', syncRoute);
+    };
+  }, []);
+
+  const navigateTo = useCallback((nextPage: Page) => {
+    const nextHash = pageToRoute(nextPage);
+    if (window.location.hash !== nextHash) {
+      window.location.hash = nextHash;
+    } else {
+      setPage(nextPage);
+    }
+  }, []);
 
   // Fetch cities from backend
   useEffect(() => {
@@ -274,8 +326,8 @@ function App() {
 
   const handleLoadComparison = useCallback((cs: City[]) => {
     setSelectedCities(cs.slice(0, 4));
-    setTab('compare');
-  }, []);
+    navigateTo('compare');
+  }, [navigateTo]);
 
   const handleCitySelect = (city: City) => {
     // Add city to comparison if not already selected (max 4 cities)
@@ -303,30 +355,71 @@ function App() {
     (profile?.favorites ?? []).map(f => `${f.name}|${f.state_code}`),
   );
 
+  const pageTitle = (() => {
+    switch (page) {
+      case 'compare':
+        return 'City Comparison';
+      case 'salary':
+        return 'Salary Calculator';
+      case 'finder':
+        return 'Smart City Finder';
+      case 'profile':
+        return 'My Profile';
+      default:
+        return 'Choose Your Planner';
+    }
+  })();
+
   return (
     <div className="app-shell">
       <AuthBar />
 
-      <h1>LiveWhere — Cost of Living Comparison Tool</h1>
+      <header className="app-hero card">
+        <p className="app-kicker">LiveWhere</p>
+        <h1>Plan where to live with confidence</h1>
+        <p className="app-subtitle">
+          Explore city affordability, compare purchasing power, and save personalized insights.
+        </p>
+      </header>
 
-      <nav className="app-tabs" style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '16px' }}>
-        <button
-          type="button"
-          className={tab === 'compare' ? 'selected-city-chip' : 'clear-selection-button'}
-          onClick={() => setTab('compare')}
-        >
-          Compare
-        </button>
-        <button
-          type="button"
-          className={tab === 'profile' ? 'selected-city-chip' : 'clear-selection-button'}
-          onClick={() => setTab('profile')}
-        >
-          My Profile
-        </button>
+      <nav className="app-nav" aria-label="Primary">
+        <button type="button" className={page === 'home' ? 'app-nav-button active' : 'app-nav-button'} onClick={() => navigateTo('home')}>Home</button>
+        <button type="button" className={page === 'compare' ? 'app-nav-button active' : 'app-nav-button'} onClick={() => navigateTo('compare')}>City Comparison</button>
+        <button type="button" className={page === 'salary' ? 'app-nav-button active' : 'app-nav-button'} onClick={() => navigateTo('salary')}>Salary Calculator</button>
+        <button type="button" className={page === 'finder' ? 'app-nav-button active' : 'app-nav-button'} onClick={() => navigateTo('finder')}>Smart City Finder</button>
+        <button type="button" className={page === 'profile' ? 'app-nav-button active' : 'app-nav-button'} onClick={() => navigateTo('profile')}>My Profile</button>
       </nav>
 
-      {tab === 'compare' && (
+      <section className="page-heading">
+        <h2>{pageTitle}</h2>
+      </section>
+
+      {page === 'home' && (
+        <div className="home-grid">
+          <article className="card feature-card">
+            <h3>Interactive City Comparison</h3>
+            <p>Select up to 4 cities on a map and compare cost-of-living signals side by side.</p>
+            <button type="button" onClick={() => navigateTo('compare')}>Open Comparison</button>
+          </article>
+          <article className="card feature-card">
+            <h3>Salary Adjustment Calculator</h3>
+            <p>Estimate how much salary you need to keep the same purchasing power after moving.</p>
+            <button type="button" onClick={() => navigateTo('salary')}>Open Calculator</button>
+          </article>
+          <article className="card feature-card">
+            <h3>Smart City Finder</h3>
+            <p>Filter cities by your preferences and discover top affordability matches quickly.</p>
+            <button type="button" onClick={() => navigateTo('finder')}>Find Cities</button>
+          </article>
+          <article className="card feature-card">
+            <h3>Your Saved Profile</h3>
+            <p>Sign in to keep favorites, saved comparisons, and weighting preferences in one place.</p>
+            <button type="button" onClick={() => navigateTo('profile')}>Open Profile</button>
+          </article>
+        </div>
+      )}
+
+      {page === 'compare' && (
         <>
           <div className="app-section">
             {loadingCities && <p>Loading cities...</p>}
@@ -370,18 +463,22 @@ function App() {
               onSaveComparison={user ? handleSaveComparison : undefined}
             />
           </div>
-
-          <div className="app-section">
-            <SalaryCalculator />
-          </div>
-
-          <div className="app-section">
-            <SmartCityFinder />
-          </div>
         </>
       )}
 
-      {tab === 'profile' && (
+      {page === 'salary' && (
+        <div className="app-section card feature-shell">
+          <SalaryCalculator />
+        </div>
+      )}
+
+      {page === 'finder' && (
+        <div className="app-section card feature-shell">
+          <SmartCityFinder />
+        </div>
+      )}
+
+      {page === 'profile' && (
         <div className="app-section">
           <UserProfile
             user={user}
