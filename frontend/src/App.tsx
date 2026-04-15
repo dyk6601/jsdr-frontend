@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import './App.css'
-import logo from './assets/logo.png'
+import logo from '../assets/logo.png'
 import CityMap from './components/CityMap'
 import CityComparison from './components/CityComparison'
 import SalaryCalculator from './components/SalaryCalculator'
