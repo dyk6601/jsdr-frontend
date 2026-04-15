@@ -29,6 +29,8 @@ interface City {
   average_salary?: number;
 }
 
+// These two maps are intentionally keyed by `City|ST` to keep the UI resilient when
+// backend payloads are incomplete (e.g., missing coords or salary for a city).
 const CITY_COORDINATES: Record<string, [number, number]> = {
   'New York|NY': [40.7128, -74.006],
   'Los Angeles|CA': [34.0522, -118.2437],
@@ -131,6 +133,8 @@ const getFallbackCoordinates = (name: string, stateCode?: string): [number, numb
 };
 
 const normalizeCity = (raw: any): City | null => {
+  // The cities endpoint has historically returned slightly different shapes, so we
+  // normalize here to avoid leaking backend-specific quirks throughout the UI.
   const name = raw?.name ?? raw?.city;
   if (!name || typeof name !== 'string') return null;
 
@@ -160,6 +164,8 @@ const normalizeCity = (raw: any): City | null => {
 type Page = 'home' | 'compare' | 'salary' | 'finder' | 'profile';
 
 const routeToPage = (hash: string): Page => {
+  // Hash routing keeps navigation entirely client-side without requiring server
+  // route configuration (handy for static hosting and simple dev setups).
   const route = hash.replace(/^#/, '').trim();
   switch (route) {
     case '/compare':
@@ -201,7 +207,8 @@ function App() {
   const [profile, setProfile] = useState<UserProfileData | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
 
-  // Keep page in sync with URL hash
+  // Keep page state in sync with the URL hash so deep links (and refreshes) land
+  // on the expected view.
   useEffect(() => {
     const syncRoute = () => {
       setPage(routeToPage(window.location.hash));
@@ -222,7 +229,7 @@ function App() {
     }
   }, []);
 
-  // Fetch cities from backend
+  // Fetch cities once on mount. We keep results in memory so switching pages is instant.
   useEffect(() => {
     let cancelled = false;
 
@@ -255,7 +262,8 @@ function App() {
     };
   }, []);
 
-  // Keep auth + profile in sync (runs on mount and when user signs in/out)
+  // Keep auth + profile in sync.
+  // We also resync on window focus so returning from an OAuth redirect updates the UI.
   useEffect(() => {
     let cancelled = false;
 
