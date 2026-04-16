@@ -1,7 +1,15 @@
 import { useState, useEffect } from 'react'
-import { getCurrentUser, signOut, type AuthUser } from '../api'
+import { getCurrentUser, signOut} from '../api'
 import { API_URLS } from '../config/api'
 
+// --- Auth (Google OAuth `session` cookie) ---
+
+type AuthUser = {
+    email: string
+    name?: string
+    avatar_url?: string
+  }
+  
 export default function AuthBar() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -26,9 +34,9 @@ export default function AuthBar() {
     void (async () => {
       try {
         const u = await getCurrentUser();
-        if (!cancelled) setUser(u);
+        setUser(u['user']);
       } finally {
-        if (!cancelled) setAuthLoading(false);
+        setAuthLoading(false);
       }
     })();
     return () => {

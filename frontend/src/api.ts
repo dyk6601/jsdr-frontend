@@ -126,13 +126,6 @@ export async function setPopulation(cityName: string, state: string, population:
   return await res.json()
 }
 
-// --- Auth (Google OAuth `session` cookie) ---
-
-export type AuthUser = {
-  email: string
-  name?: string
-  avatar_url?: string
-}
 
 /**
  * Returns the signed-in user when GET /auth/me succeeds.
@@ -145,6 +138,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     if (res.status === 404) return null
     if (!res.ok) return null
     const body = await res.json()
+<<<<<<< Updated upstream
     const user = (body && typeof body === 'object' && 'user' in body)
       ? (body as { user?: AuthUser }).user
       : (body as AuthUser)
@@ -152,6 +146,10 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       return user
     }
     return null
+=======
+    console.log('body', body);
+    return body as AuthUser
+>>>>>>> Stashed changes
   } catch {
     return null
   }
