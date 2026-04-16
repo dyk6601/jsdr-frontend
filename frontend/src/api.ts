@@ -1,7 +1,11 @@
 import { API_URLS } from './config/api'
 
 export type City = { id: string; name: string; [key: string]: any }
-
+export type AuthUser = {
+  email: string
+  name?: string
+  avatar_url?: string
+}
 /** Sends the `session` cookie set by Google OAuth callback (same-site or configured CORS). */
 export function apiFetch(
   input: RequestInfo | URL,
@@ -138,18 +142,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     if (res.status === 404) return null
     if (!res.ok) return null
     const body = await res.json()
-<<<<<<< Updated upstream
-    const user = (body && typeof body === 'object' && 'user' in body)
-      ? (body as { user?: AuthUser }).user
-      : (body as AuthUser)
-    if (user && typeof user.email === 'string') {
-      return user
-    }
-    return null
-=======
-    console.log('body', body);
     return body as AuthUser
->>>>>>> Stashed changes
   } catch {
     return null
   }

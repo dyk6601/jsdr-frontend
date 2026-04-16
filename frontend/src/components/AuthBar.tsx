@@ -1,14 +1,10 @@
 import { useState, useEffect } from 'react'
-import { getCurrentUser, signOut} from '../api'
+import { getCurrentUser, signOut, type AuthUser} from '../api'
 import { API_URLS } from '../config/api'
 
 // --- Auth (Google OAuth `session` cookie) ---
 
-type AuthUser = {
-    email: string
-    name?: string
-    avatar_url?: string
-  }
+
   
 export default function AuthBar() {
   const [user, setUser] = useState<AuthUser | null>(null);
