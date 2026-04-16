@@ -102,6 +102,9 @@ const CityComparison = ({
   const [favBusy, setFavBusy] = useState<string | null>(null);
   const [saveBusy, setSaveBusy] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [saveDraftName, setSaveDraftName] = useState('');
+  const saveInputRef = useRef<HTMLInputElement | null>(null);
   const weightsDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync weights when the authenticated profile supplies them
@@ -147,20 +150,46 @@ const CityComparison = ({
     }
   };
 
+  const openSaveDialog = () => {
+    setSaveError(null);
+    setSaveDraftName('');
+    setSaveDialogOpen(true);
+  };
+
+  const closeSaveDialog = () => {
+    if (saveBusy) return;
+    setSaveDialogOpen(false);
+  };
+
   const handleSave = async () => {
     if (!onSaveComparison || cities.length === 0) return;
-    const name = window.prompt('Name this comparison:');
-    if (!name || !name.trim()) return;
+    const trimmed = saveDraftName.trim();
+    if (!trimmed) return;
     setSaveBusy(true);
     setSaveError(null);
     try {
-      await onSaveComparison(name.trim(), cities);
+      await onSaveComparison(trimmed, cities);
+      setSaveDialogOpen(false);
+      setSaveDraftName('');
     } catch (e: any) {
       setSaveError(e?.message || 'Failed to save comparison');
     } finally {
       setSaveBusy(false);
     }
   };
+
+  useEffect(() => {
+    if (!saveDialogOpen) return;
+    const id = requestAnimationFrame(() => saveInputRef.current?.focus());
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeSaveDialog();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      cancelAnimationFrame(id);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [saveDialogOpen, saveBusy]);
 
   if (cities.length === 0) {
     return (
@@ -206,14 +235,73 @@ const CityComparison = ({
           <button
             type="button"
             className="selected-city-chip"
-            onClick={() => void handleSave()}
+            onClick={openSaveDialog}
             disabled={saveBusy}
           >
             {saveBusy ? 'Saving...' : 'Save comparison'}
           </button>
-          {saveError && (
+          {saveError && !saveDialogOpen && (
             <p className="status-error" style={{ marginTop: '6px' }}>{saveError}</p>
           )}
+        </div>
+      )}
+
+      {saveDialogOpen && (
+        <div
+          className="save-dialog-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="save-dialog-title"
+          onMouseDown={e => {
+            if (e.target === e.currentTarget) closeSaveDialog();
+          }}
+        >
+          <form
+            className="save-dialog"
+            onSubmit={e => {
+              e.preventDefault();
+              void handleSave();
+            }}
+          >
+            <h3 id="save-dialog-title" className="save-dialog-title">Save comparison</h3>
+            <p className="save-dialog-sub">
+              {cities.map(c => `${c.name}${c.state_code ? `, ${c.state_code}` : ''}`).join(' · ')}
+            </p>
+            <label className="save-dialog-label" htmlFor="save-dialog-input">
+              Name
+            </label>
+            <input
+              id="save-dialog-input"
+              ref={saveInputRef}
+              type="text"
+              className="save-dialog-input"
+              value={saveDraftName}
+              onChange={e => setSaveDraftName(e.target.value)}
+              placeholder="e.g. West coast shortlist"
+              maxLength={120}
+              disabled={saveBusy}
+            />
+            {saveError && (
+              <p className="status-error save-dialog-error">{saveError}</p>
+            )}
+            <div className="save-dialog-actions">
+              <button
+                type="button"
+                className="profile-action-button profile-action-primary"
+                onClick={closeSaveDialog}
+                disabled={saveBusy}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="profile-action-button save-dialog-submit"
+                disabled={saveBusy || !saveDraftName.trim()}
+              >
+                {saveBusy ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

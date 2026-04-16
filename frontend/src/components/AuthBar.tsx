@@ -65,6 +65,7 @@ export default function AuthBar() {
               <button
                 type="button"
                 className="clear-selection-button auth-bar-signout"
+                style={{ marginTop: 0 }}
                 onClick={() => void handleSignOut()}
               >
                 Sign out

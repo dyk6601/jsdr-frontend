@@ -99,21 +99,16 @@ export default function UserProfile({
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '760px', margin: '0 auto' }}>
-      <h2>My Profile</h2>
-      <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginTop: 0 }}>
-        Signed in as <strong>{user.name ?? user.email}</strong>
-      </p>
-
+    <div className="profile-page">
       {/* Favorites */}
-      <section style={{ marginTop: '28px' }}>
-        <h3>Favorite Cities</h3>
+      <section className="profile-section">
+        <h3 className="profile-section-title">Favorite Cities</h3>
         {profile.favorites.length === 0 ? (
-          <p style={{ color: 'var(--color-text-muted)' }}>
+          <p className="profile-empty">
             No favorites yet. Use the ★ button in the comparison view to save a city.
           </p>
         ) : (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          <div className="profile-chip-row">
             {profile.favorites.map(fav => {
               const key = `fav:${fav.name}|${fav.state_code}`;
               return (
@@ -134,51 +129,41 @@ export default function UserProfile({
       </section>
 
       {/* Saved comparisons */}
-      <section style={{ marginTop: '32px' }}>
-        <h3>Saved Comparisons</h3>
+      <section className="profile-section">
+        <h3 className="profile-section-title">Saved Comparisons</h3>
         {profile.saved_comparisons.length === 0 ? (
-          <p style={{ color: 'var(--color-text-muted)' }}>
+          <p className="profile-empty">
             No saved comparisons yet. Use "Save comparison" in the comparison view.
           </p>
         ) : (
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+          <ul className="saved-comparison-list">
             {profile.saved_comparisons.map(c => {
               const key = `cmp:${c.id}`;
               return (
-                <li
-                  key={c.id}
-                  style={{
-                    border: '1px solid var(--color-border, #ccc)',
-                    borderRadius: '8px',
-                    padding: '12px',
-                    marginBottom: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: '180px' }}>
-                    <div style={{ fontWeight: 600 }}>{c.name}</div>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                <li key={c.id} className="saved-comparison-item">
+                  <div className="saved-comparison-info">
+                    <div className="saved-comparison-name">{c.name}</div>
+                    <div className="saved-comparison-cities">
                       {c.cities.map(x => `${x.name}, ${x.state_code}`).join(' · ')}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleLoadComparison(c)}
-                    className="selected-city-chip"
-                  >
-                    Load
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busyKey === key}
-                    onClick={() => void handleDeleteComparison(c)}
-                    className="clear-selection-button"
-                  >
-                    Delete
-                  </button>
+                  <div className="saved-comparison-actions">
+                    <button
+                      type="button"
+                      onClick={() => handleLoadComparison(c)}
+                      className="profile-action-button profile-action-primary"
+                    >
+                      Load
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busyKey === key}
+                      onClick={() => void handleDeleteComparison(c)}
+                      className="profile-action-button profile-action-danger"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </li>
               );
             })}
@@ -187,16 +172,16 @@ export default function UserProfile({
       </section>
 
       {/* Weights */}
-      <section style={{ marginTop: '32px' }}>
-        <h3>Current Spending Weights</h3>
-        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginTop: 0 }}>
+      <section className="profile-section">
+        <h3 className="profile-section-title">Current Spending Weights</h3>
+        <p className="profile-section-hint">
           Adjust these from the sliders in the comparison view — changes are saved automatically.
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', rowGap: '6px', columnGap: '16px', maxWidth: '320px' }}>
+        <div className="profile-weights-grid">
           {CATEGORIES.map(cat => (
-            <div key={cat} style={{ display: 'contents' }}>
-              <span>{cat}</span>
-              <span style={{ fontWeight: 600 }}>{profile.weights[cat] ?? 0}</span>
+            <div key={cat} className="profile-weight-row">
+              <span className="profile-weight-label">{cat}</span>
+              <span className="profile-weight-value">{profile.weights[cat] ?? 0}</span>
             </div>
           ))}
         </div>
