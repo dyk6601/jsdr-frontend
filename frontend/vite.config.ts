@@ -18,9 +18,10 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      // Proxy /api to Flask backend to avoid CORS in development
+      // Proxy /api to the backend to avoid CORS in development.
+      // Set API_PROXY_TARGET env var to override (e.g. cloud URL in frontend-cloud.sh).
       '/api': {
-        target: 'http://localhost:8000',
+        target: process.env.API_PROXY_TARGET ?? 'http://localhost:8000',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
