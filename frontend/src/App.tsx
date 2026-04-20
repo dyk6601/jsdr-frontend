@@ -163,6 +163,7 @@ const normalizeCity = (raw: any): City | null => {
 };
 
 type Page = 'home' | 'compare' | 'salary' | 'finder' | 'profile';
+type Theme = 'light' | 'dark';
 
 const routeToPage = (hash: string): Page => {
   // Hash routing keeps navigation entirely client-side without requiring server
@@ -199,6 +200,15 @@ const pageToRoute = (page: Page): string => {
 
 // Main application shell component
 function App() {
+  const [theme, setTheme] = useState<Theme>(() => {
+    try {
+      const saved = window.localStorage.getItem('theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+    } catch {
+      // Ignore storage errors and use system preference.
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
   const [cities, setCities] = useState<City[]>([]);
   const [selectedCities, setSelectedCities] = useState<City[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
@@ -207,6 +217,15 @@ function App() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<UserProfileData | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    try {
+      window.localStorage.setItem('theme', theme);
+    } catch {
+      // Ignore storage errors.
+    }
+  }, [theme]);
 
   // Keep page state in sync with the URL hash so deep links (and refreshes) land
   // on the expected view.
@@ -381,6 +400,18 @@ function App() {
 
   return (
     <div className="app-shell">
+      <div className="top-controls">
+        <button
+          type="button"
+          className="theme-toggle"
+          onClick={() => setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))}
+          aria-pressed={theme === 'dark'}
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        >
+          {theme === 'dark' ? '☀️ Light mode' : '🌙 Dark mode'}
+        </button>
+      </div>
+
       <AuthBar />
 
       <header className="app-hero card">
