@@ -30,9 +30,13 @@ export default function AuthBar() {
     void (async () => {
       try {
         const u = await getCurrentUser();
-        setUser(u['user']);
+        if (!cancelled) {
+          setUser(u);
+        }
       } finally {
-        setAuthLoading(false);
+        if (!cancelled) {
+          setAuthLoading(false);
+        }
       }
     })();
     return () => {

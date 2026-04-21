@@ -881,7 +881,19 @@
 .salary-breakdown {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-2) var(--space-6);
+  gap: var(--space-4);
+}
+
+.salary-city-column {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: var(--color-surface-muted);
+}
+
+.salary-city-column h4 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-md);
 }
 
 .salary-detail {
@@ -893,6 +905,16 @@
 
 .salary-detail span {
   color: var(--color-text-muted);
+}
+
+.salary-difference-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
 }
 
 @keyframes fadeIn {
@@ -913,6 +935,10 @@
 
   .salary-row label {
     min-width: unset;
+  }
+
+  .salary-breakdown {
+    grid-template-columns: 1fr;
   }
 
   .city-map-container {

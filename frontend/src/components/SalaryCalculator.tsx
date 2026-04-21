@@ -139,46 +139,45 @@ const SalaryCalculator = () => {
           </div>
 
           <div className="salary-breakdown">
-            <div className="salary-detail">
-              <span>COL index ({result.from_city})</span>
-              <strong>{result.col_from}</strong>
-            </div>
-            <div className="salary-detail">
-              <span>COL index ({result.to_city})</span>
-              <strong>{result.col_to}</strong>
-            </div>
-            <div className="salary-detail">
-              <span>Difference</span>
-              <strong>
-                {result.difference >= 0 ? '+' : ''}
-                ${Math.abs(result.difference).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-              </strong>
+            <div className="salary-city-column">
+              <h4>{result.from_city}</h4>
+              <div className="salary-detail">
+                <span>COL index</span>
+                <strong>{result.col_from}</strong>
+              </div>
+              <div className="salary-detail">
+                <span>State tax</span>
+                <strong>{originTax !== null ? `${(originTax * 100).toFixed(1)}%` : 'N/A'}</strong>
+              </div>
+              <div className="salary-detail">
+                <span>Est. take-home</span>
+                <strong>{originNet !== null ? `$${originNet.toLocaleString()}` : 'N/A'}</strong>
+              </div>
             </div>
 
-            {originTax !== null && (
+            <div className="salary-city-column">
+              <h4>{result.to_city}</h4>
               <div className="salary-detail">
-                <span>State tax ({result.from_city})</span>
-                <strong>{(originTax * 100).toFixed(1)}%</strong>
+                <span>COL index</span>
+                <strong>{result.col_to}</strong>
               </div>
-            )}
-            {targetTax !== null && (
               <div className="salary-detail">
-                <span>State tax ({result.to_city})</span>
-                <strong>{(targetTax * 100).toFixed(1)}%</strong>
+                <span>State tax</span>
+                <strong>{targetTax !== null ? `${(targetTax * 100).toFixed(1)}%` : 'N/A'}</strong>
               </div>
-            )}
-            {originNet !== null && (
               <div className="salary-detail">
-                <span>Est. take-home ({result.from_city})</span>
-                <strong>${originNet.toLocaleString()}</strong>
+                <span>Est. take-home</span>
+                <strong>{targetNet !== null ? `$${targetNet.toLocaleString()}` : 'N/A'}</strong>
               </div>
-            )}
-            {targetNet !== null && (
-              <div className="salary-detail">
-                <span>Est. take-home ({result.to_city})</span>
-                <strong>${targetNet.toLocaleString()}</strong>
-              </div>
-            )}
+            </div>
+          </div>
+
+          <div className="salary-difference-row">
+            <span>Difference</span>
+            <strong>
+              {result.difference >= 0 ? '+' : ''}
+              ${Math.abs(result.difference).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            </strong>
           </div>
 
           {(originTax !== null || targetTax !== null) && (

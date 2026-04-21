@@ -5,9 +5,9 @@ import App from './App';
 describe('App', () => {
   it('renders the new hero heading', () => {
     render(<App />);
-    expect(
-      screen.getByText(/Plan where to live with confidence/i)
-    ).toBeInTheDocument();
+    const heading = screen.getByRole('heading', { level: 1, name: /Plan where to live/i });
+    expect(heading).toBeInTheDocument();
+    expect(heading).toHaveTextContent(/with confidence/i);
   });
 
   it('renders the new hero subtitle text', () => {
