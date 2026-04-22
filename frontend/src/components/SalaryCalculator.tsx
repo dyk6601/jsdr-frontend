@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState, type FormEvent } from 'react';
 import { getSalaryAdjustment, type SalaryResult } from '../api';
 import { formatSignedCurrencyFromDifference } from '../utils/salaryDisplay';
 
@@ -58,21 +58,76 @@ const SalaryCalculator = () => {
   const [result, setResult] = useState<SalaryResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copyHint, setCopyHint] = useState<string | null>(null);
 
-  const calculateAdjustedSalary = async () => {
+  const validateInputs = useCallback((): { ok: true; salary: number; from: string; to: string } | { ok: false; message: string } => {
+    const from = originCity.trim();
+    const to = targetCity.trim();
+    if (!from || !to) {
+      return { ok: false, message: 'Enter both origin and target city names.' };
+    }
+    if (from.toLowerCase() === to.toLowerCase()) {
+      return { ok: false, message: 'Choose two different cities to compare.' };
+    }
     const salary = parseFloat(currentSalary);
-    if (isNaN(salary) || !originCity.trim() || !targetCity.trim()) return;
+    if (isNaN(salary) || salary <= 0) {
+      return { ok: false, message: 'Enter a valid salary greater than zero.' };
+    }
+    return { ok: true, salary, from, to };
+  }, [originCity, targetCity, currentSalary]);
+
+  const calculateAdjustedSalary = useCallback(async () => {
+    const v = validateInputs();
+    if (!v.ok) {
+      setError(v.message);
+      setResult(null);
+      return;
+    }
 
     setLoading(true);
     setError(null);
     try {
-      const data = await getSalaryAdjustment(salary, originCity.trim(), targetCity.trim());
+      const data = await getSalaryAdjustment(v.salary, v.from, v.to);
       setResult(data);
-    } catch (e: any) {
-      setError(e?.message || 'Failed to calculate salary adjustment');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Failed to calculate salary adjustment';
+      setError(msg);
       setResult(null);
     } finally {
       setLoading(false);
+    }
+  }, [validateInputs]);
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    void calculateAdjustedSalary();
+  };
+
+  const swapCities = () => {
+    setOriginCity(targetCity);
+    setTargetCity(originCity);
+    setError(null);
+  };
+
+  const clearForm = () => {
+    setOriginCity('');
+    setTargetCity('');
+    setCurrentSalary('');
+    setResult(null);
+    setError(null);
+    setCopyHint(null);
+  };
+
+  const copyAdjustedSalary = async () => {
+    if (result === null) return;
+    const text = String(Math.round(result.adjusted_salary));
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyHint('Copied to clipboard');
+      window.setTimeout(() => setCopyHint(null), 2000);
+    } catch {
+      setCopyHint('Copy failed (browser blocked clipboard)');
+      window.setTimeout(() => setCopyHint(null), 2500);
     }
   };
 
@@ -87,39 +142,63 @@ const SalaryCalculator = () => {
       <h2>Salary Adjustment Calculator</h2>
       <p style={{ color: 'var(--color-text-muted)' }}>Compare purchasing power between cities</p>
 
-      <div className="salary-form">
+      <form className="salary-form" onSubmit={handleSubmit} noValidate>
         <div className="salary-row">
-          <label>Origin city</label>
+          <label htmlFor="salary-origin">Origin city</label>
           <input
+            id="salary-origin"
+            name="origin"
             type="text"
             value={originCity}
             onChange={e => setOriginCity(e.target.value)}
             placeholder="e.g. New York"
+            autoComplete="off"
           />
         </div>
         <div className="salary-row">
-          <label>Current salary ($)</label>
+          <label htmlFor="salary-amount">Current salary ($)</label>
           <input
+            id="salary-amount"
+            name="salary"
             type="number"
+            min={1}
+            step="any"
             value={currentSalary}
             onChange={e => setCurrentSalary(e.target.value)}
             placeholder="e.g. 100000"
           />
         </div>
         <div className="salary-row">
-          <label>Target city</label>
+          <label htmlFor="salary-target">Target city</label>
           <input
+            id="salary-target"
+            name="target"
             type="text"
             value={targetCity}
             onChange={e => setTargetCity(e.target.value)}
             placeholder="e.g. Austin"
+            autoComplete="off"
           />
         </div>
 
-        <button onClick={calculateAdjustedSalary} disabled={loading}>
-          {loading ? 'Calculating…' : 'Calculate'}
-        </button>
-      </div>
+        <div className="salary-form-toolbar">
+          <button type="submit" disabled={loading} className="salary-button-primary">
+            {loading ? 'Calculating…' : 'Calculate'}
+          </button>
+          <button
+            type="button"
+            className="salary-button-secondary"
+            onClick={swapCities}
+            disabled={loading}
+            aria-label="Swap origin and target cities"
+          >
+            Swap cities
+          </button>
+          <button type="button" className="salary-button-secondary" onClick={clearForm} disabled={loading}>
+            Clear
+          </button>
+        </div>
+      </form>
 
       {error && <p className="status-error" style={{ marginTop: '10px' }}>{error}</p>}
 
@@ -132,6 +211,12 @@ const SalaryCalculator = () => {
             <span className="salary-amount">
               ${result.adjusted_salary.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </span>
+            <p className="salary-copy-row">
+              <button type="button" className="salary-button-secondary salary-copy-button" onClick={() => void copyAdjustedSalary()}>
+                Copy equivalent salary
+              </button>
+              {copyHint && <span className="salary-copy-hint">{copyHint}</span>}
+            </p>
             <span style={{
               fontSize: 'var(--font-size-sm)',
               color: result.percentage_change >= 0 ? 'var(--color-danger)' : 'var(--color-success)',

@@ -772,10 +772,56 @@
   font-size: var(--font-size-md);
 }
 
-.salary-form button {
+.salary-form-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
   margin-top: var(--space-2);
-  align-self: flex-start;
+  align-items: center;
+}
+
+.salary-button-primary {
   min-width: 140px;
+}
+
+.salary-button-secondary {
+  min-width: 7.5rem;
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  box-shadow: none;
+}
+
+.salary-button-secondary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface-muted));
+  color: var(--color-text);
+}
+
+.salary-button-secondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.salary-copy-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin: 0;
+  min-height: 1.5rem;
+}
+
+.salary-copy-button {
+  min-width: unset;
+  font-size: var(--font-size-sm);
+  padding: 0.35rem 0.75rem;
+}
+
+.salary-copy-hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
 }
 
 /* ---- City Map ---- */
