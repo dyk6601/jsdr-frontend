@@ -92,6 +92,7 @@ export type SalaryResult = {
   percentage_change: number
 }
 
+//use these as an example for the presentation. Promise<Record<string, number>> 
 export async function getCostOfLiving(): Promise<Record<string, number>> {
   const res = await apiFetch(API_URLS.COST_OF_LIVING)
   if (!res.ok) throw new Error(`getCostOfLiving failed: ${res.status}`)
