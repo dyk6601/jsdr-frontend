@@ -25,6 +25,7 @@ export default function AuthBar() {
     }
   }, []);
 
+  // getCurrentUser resolves after fetch; guard so we never setState after unmount (tests + fast navigations).
   useEffect(() => {
     let cancelled = false;
     void (async () => {

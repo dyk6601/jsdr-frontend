@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getSalaryAdjustment, type SalaryResult } from '../api';
+import { formatSignedCurrencyFromDifference } from '../utils/salaryDisplay';
 
 // Approximate top marginal state income tax rates (2024)
 const STATE_TAX: Record<string, number> = {
@@ -75,6 +76,7 @@ const SalaryCalculator = () => {
     }
   };
 
+  // Tax / take-home are client-side estimates only; API still drives COL and adjusted salary.
   const originTax = result ? getStateTaxRate(result.from_city) : null;
   const targetTax = result ? getStateTaxRate(result.to_city) : null;
   const originNet = result && originTax !== null ? estimateNetIncome(result.original_salary, originTax) : null;
@@ -138,6 +140,7 @@ const SalaryCalculator = () => {
             </span>
           </div>
 
+          {/* Two equal columns keep labels aligned; N/A placeholders avoid row height shifts when tax data is missing. */}
           <div className="salary-breakdown">
             <div className="salary-city-column">
               <h4>{result.from_city}</h4>
@@ -172,12 +175,10 @@ const SalaryCalculator = () => {
             </div>
           </div>
 
+          {/* Full-width row so the dollar delta does not sit in one grid cell and misalign columns. */}
           <div className="salary-difference-row">
             <span>Difference</span>
-            <strong>
-              {result.difference >= 0 ? '+' : ''}
-              ${Math.abs(result.difference).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-            </strong>
+            <strong>{formatSignedCurrencyFromDifference(result.difference)}</strong>
           </div>
 
           {(originTax !== null || targetTax !== null) && (
