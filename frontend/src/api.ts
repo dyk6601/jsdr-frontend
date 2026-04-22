@@ -1,5 +1,7 @@
 import { API_URLS } from './config/api'
 
+
+//this should be the example for the presentation of why ts is different from js and why it may be better
 export type City = { id: string; name: string; [key: string]: any }
 export type AuthUser = {
   email: string
@@ -94,6 +96,7 @@ export type SalaryResult = {
   percentage_change: number
 }
 
+//use these as an example for the presentation. Promise<Record<string, number>> 
 export async function getCostOfLiving(): Promise<Record<string, number>> {
   const res = await apiFetch(API_URLS.COST_OF_LIVING)
   if (!res.ok) throw new Error(`getCostOfLiving failed: ${res.status}`)
