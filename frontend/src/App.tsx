@@ -163,7 +163,25 @@ const normalizeCity = (raw: any): City | null => {
 };
 
 type Page = 'home' | 'compare' | 'salary' | 'finder' | 'profile';
-type Theme = 'light' | 'dark';
+type Theme = 'light' | 'dark' | 'beige';
+
+const THEME_CYCLE: Theme[] = ['light', 'dark', 'beige'];
+
+const getNextTheme = (current: Theme): Theme => {
+  const idx = THEME_CYCLE.indexOf(current);
+  return THEME_CYCLE[(idx + 1) % THEME_CYCLE.length];
+};
+
+const getThemeToggleLabel = (theme: Theme): string => {
+  switch (theme) {
+    case 'light':
+      return '🌙 Dark mode';
+    case 'dark':
+      return '🌾 Beige mode';
+    default:
+      return '☀️ Light mode';
+  }
+};
 
 const routeToPage = (hash: string): Page => {
   // Hash routing keeps navigation entirely client-side without requiring server
@@ -203,7 +221,7 @@ function App() {
   const [theme, setTheme] = useState<Theme>(() => {
     try {
       const saved = window.localStorage.getItem('theme');
-      if (saved === 'light' || saved === 'dark') return saved;
+      if (saved === 'light' || saved === 'dark' || saved === 'beige') return saved;
     } catch {
       // Ignore storage errors and use system preference.
     }
@@ -404,11 +422,11 @@ function App() {
         <button
           type="button"
           className="theme-toggle"
-          onClick={() => setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))}
+          onClick={() => setTheme(prev => getNextTheme(prev))}
           aria-pressed={theme === 'dark'}
-          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          aria-label={`Switch to ${getNextTheme(theme)} mode`}
         >
-          {theme === 'dark' ? '☀️ Light mode' : '🌙 Dark mode'}
+          {getThemeToggleLabel(theme)}
         </button>
       </div>
 
