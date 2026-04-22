@@ -1,5 +1,7 @@
 import { API_URLS } from './config/api'
 
+
+//this should be the example for the presentation of why ts is different from js and why it may be better
 export type City = { id: string; name: string; [key: string]: any }
 
 /** Sends the `session` cookie set by Google OAuth callback (same-site or configured CORS). */
