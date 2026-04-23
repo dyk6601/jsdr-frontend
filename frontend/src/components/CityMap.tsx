@@ -11,7 +11,7 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
 // Override default icon paths to use imported assets
-delete (Icon.Default.prototype as any)._getIconUrl;
+delete (Icon.Default.prototype as Record<string, unknown>)._getIconUrl;
 Icon.Default.mergeOptions({
   iconUrl: markerIcon,
   iconRetinaUrl: markerIcon2x,
@@ -32,9 +32,11 @@ interface CityMapProps {
   onCitySelect?: (city: City) => void;
 }
 
+// Cost-of-living index range used for normalization; sourced from the dataset's observed bounds
 const MAX_COL = 105;
 const MIN_COL = 35;
 
+// Maps a raw COL index onto a 0–100 affordability score (higher = more affordable)
 function affordabilityScore(colIndex: number): number {
   return Math.round(Math.max(0, Math.min(100, ((MAX_COL - colIndex) / (MAX_COL - MIN_COL)) * 100)));
 }
@@ -45,6 +47,7 @@ function markerColor(score: number): string {
   return '#ef4444';                  // red — expensive
 }
 
+// Builds a small circular DivIcon so we can color markers without loading custom image assets
 function coloredIcon(color: string): DivIcon {
   return new DivIcon({
     html: `<div style="
@@ -64,12 +67,15 @@ function coloredIcon(color: string): DivIcon {
 
 // Interactive map component for city visualization
 const CityMap = ({ cities, onCitySelect }: CityMapProps) => {
+  // keyed by city name (lowercased at lookup time); populated once on mount
   const [colData, setColData] = useState<Record<string, number>>({});
 
   useEffect(() => {
+    // Silently ignore fetch errors — markers fall back to indigo when COL data is unavailable
     getCostOfLiving().then(setColData).catch(() => {});
   }, []);
 
+  // Case-insensitive lookup so "New York" matches "new york" in the dataset
   const getColIndex = (cityName: string): number | null => {
     const lower = cityName.toLowerCase();
     for (const [key, val] of Object.entries(colData)) {
@@ -89,7 +95,7 @@ const CityMap = ({ cities, onCitySelect }: CityMapProps) => {
         <p>Click on markers to select cities for comparison (max 4)</p>
       </div>
 
-      {/* Legend */}
+      {/* Color legend explaining the affordability score thresholds */}
       <div className="city-map-legend">
         <span>
           <span className="city-map-legend-dot city-map-legend-dot--affordable" />
@@ -120,10 +126,12 @@ const CityMap = ({ cities, onCitySelect }: CityMapProps) => {
             const lat = city.lat || 0;
             const lng = city.lng || 0;
 
+            // Skip cities with no coordinates rather than dropping them at [0, 0] (Gulf of Guinea)
             if (lat === 0 && lng === 0) return null;
 
             const colIdx = getColIndex(city.name);
             const score = colIdx !== null ? affordabilityScore(colIdx) : null;
+            // Fall back to indigo when COL data hasn't loaded or the city isn't in the dataset
             const icon = score !== null
               ? coloredIcon(markerColor(score))
               : coloredIcon('#6366f1');
