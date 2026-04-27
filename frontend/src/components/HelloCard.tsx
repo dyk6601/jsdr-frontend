@@ -28,9 +28,9 @@ export default function HelloCard() {
   return (
     <div className="card">
       <h2>Hello Endpoint</h2>
-      {loading && <p>Loading...</p>}
-      {error && <p className="status-error">Error: {error}</p>}
-      {!loading && !error && <p>{message}</p>}
+      {loading && <p role="status">Loading...</p>}
+      {error && <p className="status-error" role="alert">Error: {error}</p>}
+      {!loading && !error && <p role="status" aria-live="polite">{message}</p>}
     </div>
   )
 }
