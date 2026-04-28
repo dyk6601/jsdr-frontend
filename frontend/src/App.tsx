@@ -455,7 +455,14 @@ function App() {
       </nav>
 
       <section className="page-heading">
-        <h2>{pageTitle}</h2>
+        <div className="page-heading-row">
+          <h2>{pageTitle}</h2>
+          {page === 'compare' && (
+            <span className="compare-count-badge" aria-live="polite">
+              {selectedCities.length}/4 selected
+            </span>
+          )}
+        </div>
       </section>
 
       {page === 'home' && (
