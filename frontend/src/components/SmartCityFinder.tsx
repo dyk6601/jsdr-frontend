@@ -92,6 +92,17 @@ export default function SmartCityFinder() {
     }
   };
 
+  const handleResetFilters = () => {
+    setSalary('');
+    setOriginCity('');
+    setState('');
+    setSize('any');
+    setResults(null);
+    setTotal(0);
+    setError(null);
+    setOriginCol(null);
+  };
+
   return (
     <div>
       <h2>Smart City Finder</h2>
@@ -152,6 +163,16 @@ export default function SmartCityFinder() {
         <div style={{ display: 'flex', alignItems: 'flex-end' }}>
           <button onClick={handleSearch} disabled={loading} style={{ padding: '7px 20px' }}>
             {loading ? 'Searching…' : 'Find Cities'}
+          </button>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+          <button
+            type="button"
+            onClick={handleResetFilters}
+            disabled={loading}
+            style={{ padding: '7px 20px', marginLeft: '4px' }}
+          >
+            Reset filters
           </button>
         </div>
       </div>
