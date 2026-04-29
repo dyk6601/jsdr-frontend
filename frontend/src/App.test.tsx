@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi } from 'vitest';
 import App from './App';
 
 describe('App', () => {
@@ -47,5 +48,19 @@ describe('App', () => {
       screen.getByRole('link', { name: /sign in with google/i })
     );
     expect(link).toHaveAttribute('href', expect.stringMatching(/\/auth\/google$/));
+  });
+
+  it('scrolls to top when back-to-top button is clicked', async () => {
+    const scrollToMock = vi.fn();
+    Object.defineProperty(window, 'scrollTo', {
+      writable: true,
+      value: scrollToMock,
+    });
+
+    render(<App />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: /back to top/i }));
+
+    expect(scrollToMock).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
   });
 });

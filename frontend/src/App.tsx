@@ -397,6 +397,10 @@ function App() {
     setSelectedCities([]);
   };
 
+  const handleBackToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const favoriteKeys = new Set(
     (profile?.favorites ?? []).map(f => `${f.name}|${f.state_code}`),
   );
@@ -600,6 +604,15 @@ function App() {
           />
         </div>
       )}
+
+      <button
+        type="button"
+        className="back-to-top-button"
+        onClick={handleBackToTop}
+        aria-label="Back to top"
+      >
+        Back to top
+      </button>
     </div>
   )
 }

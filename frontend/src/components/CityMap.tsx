@@ -178,5 +178,3 @@ const CityMap = ({ cities, onCitySelect }: CityMapProps) => {
 };
 
 export default CityMap;
-
-export default CityMap;

@@ -334,6 +334,19 @@
   background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface-muted));
 }
 
+.back-to-top-button {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 20;
+  border: 1px solid var(--color-border);
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-pill);
+  padding: 0.5rem 0.85rem;
+  box-shadow: var(--shadow-md);
+}
+
 .app-header {
   display: flex;
   justify-content: flex-end;
