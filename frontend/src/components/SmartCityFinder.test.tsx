@@ -54,4 +54,40 @@ describe('SmartCityFinder', () => {
     expect(sizeSelect).toHaveValue('any');
     expect(screen.queryByText(/showing top 1 of 1 matching cities/i)).not.toBeInTheDocument();
   });
+
+  it('reorders results when sort dropdown changes', async () => {
+    vi.spyOn(api, 'getCostOfLiving').mockResolvedValue({});
+    vi.spyOn(api, 'getRecommendations').mockResolvedValue({
+      recommendations: [
+        {
+          name: 'Austin',
+          state_code: 'TX',
+          population: 980000,
+          col_index: 105,
+          affordability_score: 62,
+          qol_score: 71,
+        },
+        {
+          name: 'Boston',
+          state_code: 'MA',
+          population: 650000,
+          col_index: 112,
+          affordability_score: 55,
+          qol_score: 83,
+        },
+      ],
+      total: 2,
+    });
+
+    render(<SmartCityFinder />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: /find cities/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/#1 Austin, TX/i)).toBeInTheDocument();
+    });
+
+    await user.selectOptions(screen.getByLabelText(/sort by/i), 'qol');
+    expect(screen.getByText(/#1 Boston, MA/i)).toBeInTheDocument();
+  });
 });

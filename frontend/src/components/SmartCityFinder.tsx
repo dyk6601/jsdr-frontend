@@ -33,6 +33,7 @@ function ScoreBadge({ label, score }: { label: string; score: number }) {
 }
 
 export default function SmartCityFinder() {
+  const [sortBy, setSortBy] = useState<'affordability' | 'qol' | 'col' | 'population' | 'name'>('affordability');
   const [salary, setSalary] = useState('');
   const [originCity, setOriginCity] = useState('');
   const [state, setState] = useState('');
@@ -93,6 +94,7 @@ export default function SmartCityFinder() {
   };
 
   const handleResetFilters = () => {
+    setSortBy('affordability');
     setSalary('');
     setOriginCity('');
     setState('');
@@ -102,6 +104,23 @@ export default function SmartCityFinder() {
     setError(null);
     setOriginCol(null);
   };
+
+  const sortedResults = results === null
+    ? null
+    : [...results].sort((a, b) => {
+      switch (sortBy) {
+        case 'qol':
+          return b.qol_score - a.qol_score;
+        case 'col':
+          return a.col_index - b.col_index;
+        case 'population':
+          return (b.population ?? 0) - (a.population ?? 0);
+        case 'name':
+          return a.name.localeCompare(b.name);
+        default:
+          return b.affordability_score - a.affordability_score;
+      }
+    });
 
   return (
     <div>
@@ -182,17 +201,33 @@ export default function SmartCityFinder() {
       {/* Results */}
       {results !== null && (
         <div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.875rem' }}>
+              Sort by
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value as typeof sortBy)}
+                style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--color-border)', background: 'var(--color-surface-muted)', color: 'inherit' }}
+              >
+                <option value="affordability">Affordability (high to low)</option>
+                <option value="qol">Quality of life (high to low)</option>
+                <option value="col">COL index (low to high)</option>
+                <option value="population">Population (high to low)</option>
+                <option value="name">City name (A-Z)</option>
+              </select>
+            </label>
+          </div>
           <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '12px' }}>
             Showing top {results.length} of {total} matching cities, ranked by affordability
             {salary && (
               <> · Equiv. salary baseline: {originCol != null ? `${originCity.trim()} (COL ${originCol})` : 'U.S. average (COL 100)'}</>
             )}
           </p>
-          {results.length === 0 ? (
+          {sortedResults.length === 0 ? (
             <p>No cities match your filters.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {results.map((city, idx) => (
+              {sortedResults.map((city, idx) => (
                 <div
                   key={idx}
                   style={{
