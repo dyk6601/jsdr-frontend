@@ -47,21 +47,29 @@ function markerColor(score: number): string {
   return '#ef4444';                  // red — expensive
 }
 
-// Builds a small circular DivIcon so we can color markers without loading custom image assets
-function coloredIcon(color: string): DivIcon {
+// Builds a circular DivIcon that displays the affordability score inline.
+// Markers without a score (COL data missing) fall back to a small unlabeled dot.
+function coloredIcon(color: string, label?: string): DivIcon {
+  const size = label !== undefined ? 28 : 14;
   return new DivIcon({
     html: `<div style="
-      width: 14px;
-      height: 14px;
+      width: ${size}px;
+      height: ${size}px;
       background: ${color};
       border-radius: 50%;
       border: 2px solid white;
       box-shadow: 0 1px 4px rgba(0,0,0,0.4);
-    "></div>`,
+      color: white;
+      font: 600 11px/1 system-ui, -apple-system, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-shadow: 0 1px 1px rgba(0,0,0,0.4);
+    ">${label ?? ''}</div>`,
     className: '',
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
-    popupAnchor: [0, -10],
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    popupAnchor: [0, -(size / 2 + 3)],
   });
 }
 
@@ -133,7 +141,7 @@ const CityMap = ({ cities, onCitySelect }: CityMapProps) => {
             const score = colIdx !== null ? affordabilityScore(colIdx) : null;
             // Fall back to indigo when COL data hasn't loaded or the city isn't in the dataset
             const icon = score !== null
-              ? coloredIcon(markerColor(score))
+              ? coloredIcon(markerColor(score), String(score))
               : coloredIcon('#6366f1');
 
             return (
@@ -168,5 +176,7 @@ const CityMap = ({ cities, onCitySelect }: CityMapProps) => {
     </div>
   );
 };
+
+export default CityMap;
 
 export default CityMap;
